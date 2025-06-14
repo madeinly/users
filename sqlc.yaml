@@ -1,0 +1,16 @@
+version: "2"
+sql:
+  - engine: "sqlite"
+    schema: ["internal/initial_schema.sql"]
+    queries: "internal/queries/*"
+    gen:
+      go:
+        package: "userQuery"
+        out: "internal/queries/userQuery"
+        overrides:
+          - db_type: "boolean"
+            go_type: "bool"
+        sql_package: "database/sql"
+        emit_json_tags: true
+        emit_prepared_queries: true
+        emit_interface: true
