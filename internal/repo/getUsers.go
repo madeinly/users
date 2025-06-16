@@ -5,9 +5,9 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/MadeSimplest/users/internal/queries/userQuery"
+	"github.com/madeinly/users/internal/queries/userQuery"
 
-	"github.com/MadeSimplest/core"
+	"github.com/madeinly/core"
 )
 
 func GetUsers(username string, roleID int64, status string, limit int64, offset int64) ([]userQuery.GetUsersRow, error) {

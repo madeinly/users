@@ -1,9 +1,8 @@
-module github.com/MadeSimplest/users
+module github.com/madeinly/users
 
 go 1.24.1
 
 require (
-	github.com/MadeSimplest/core v0.0.0-00010101000000-000000000000
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/google/uuid v1.6.0
 	github.com/spf13/cobra v1.9.1
@@ -27,5 +26,3 @@ require (
 	modernc.org/memory v1.11.0 // indirect
 	modernc.org/sqlite v1.37.1 // indirect
 )
-
-replace github.com/MadeSimplest/core => /home/soyrbto/projects/simplest/core

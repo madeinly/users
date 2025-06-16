@@ -4,13 +4,13 @@ import (
 	_ "embed"
 	"net/http"
 
-	coreModels "github.com/MadeSimplest/core/models"
-	"github.com/MadeSimplest/users/internal/models"
+	coreModels "github.com/madeinly/core/models"
+	"github.com/madeinly/users/internal/models"
 
-	"github.com/MadeSimplest/users/internal/cmd"
-	"github.com/MadeSimplest/users/internal/queries/userQuery"
-	"github.com/MadeSimplest/users/internal/repo"
-	"github.com/MadeSimplest/users/internal/server"
+	"github.com/madeinly/users/internal/cmd"
+	"github.com/madeinly/users/internal/queries/userQuery"
+	"github.com/madeinly/users/internal/repo"
+	"github.com/madeinly/users/internal/server"
 )
 
 type api struct {

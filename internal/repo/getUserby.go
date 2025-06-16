@@ -6,9 +6,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/MadeSimplest/users/internal/queries/userQuery"
+	"github.com/madeinly/users/internal/queries/userQuery"
 
-	"github.com/MadeSimplest/core"
+	"github.com/madeinly/core"
 )
 
 func GetUserByID(userID string) (userQuery.GetUserRow, error) {

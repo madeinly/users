@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/MadeSimplest/users/internal/models"
-	"github.com/MadeSimplest/users/internal/repo"
+	"github.com/madeinly/users/internal/models"
+	"github.com/madeinly/users/internal/repo"
 
-	"github.com/MadeSimplest/users/internal/parser"
+	"github.com/madeinly/users/internal/parser"
 )
 
 func GetUser(w http.ResponseWriter, r *http.Request) {

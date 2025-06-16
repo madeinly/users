@@ -6,9 +6,9 @@ import (
 	"errors"
 	"log"
 
-	"github.com/MadeSimplest/users/internal/queries/userQuery"
+	"github.com/madeinly/users/internal/queries/userQuery"
 
-	"github.com/MadeSimplest/core"
+	"github.com/madeinly/core"
 
 	"golang.org/x/crypto/bcrypt"
 )

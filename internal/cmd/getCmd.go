@@ -7,8 +7,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/MadeSimplest/users/internal/parser"
-	"github.com/MadeSimplest/users/internal/repo"
+	"github.com/madeinly/users/internal/parser"
+	"github.com/madeinly/users/internal/repo"
 	"github.com/spf13/cobra"
 )
 

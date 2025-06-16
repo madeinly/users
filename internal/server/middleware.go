@@ -4,10 +4,10 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/MadeSimplest/users/internal/auth"
-	"github.com/MadeSimplest/users/internal/models"
-	"github.com/MadeSimplest/users/internal/repo"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/madeinly/users/internal/auth"
+	"github.com/madeinly/users/internal/models"
+	"github.com/madeinly/users/internal/repo"
 )
 
 // Define a private custom type for context keys

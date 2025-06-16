@@ -3,8 +3,8 @@ package repo
 import (
 	"context"
 
-	"github.com/MadeSimplest/core"
-	"github.com/MadeSimplest/users/internal/queries/userQuery"
+	"github.com/madeinly/core"
+	"github.com/madeinly/users/internal/queries/userQuery"
 )
 
 func DeleteUser(userID string) error {

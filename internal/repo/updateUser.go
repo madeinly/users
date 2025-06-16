@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/MadeSimplest/users/internal/queries/userQuery"
+	"github.com/madeinly/users/internal/queries/userQuery"
 
-	"github.com/MadeSimplest/core"
+	"github.com/madeinly/core"
 )
 
 func UpdateUser(userID string, password string, email string, userStatus string, roleID int64, username string) error {

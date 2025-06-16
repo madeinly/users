@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/MadeSimplest/users/internal/auth"
-	"github.com/MadeSimplest/users/internal/models"
-	"github.com/MadeSimplest/users/internal/queries/userQuery"
+	"github.com/madeinly/users/internal/auth"
+	"github.com/madeinly/users/internal/models"
+	"github.com/madeinly/users/internal/queries/userQuery"
 
-	"github.com/MadeSimplest/core"
+	"github.com/madeinly/core"
 
 	"github.com/google/uuid"
 )

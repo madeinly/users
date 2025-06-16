@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/MadeSimplest/users/internal/models"
-	"github.com/MadeSimplest/users/internal/parser"
-	"github.com/MadeSimplest/users/internal/repo"
+	"github.com/madeinly/users/internal/models"
+	"github.com/madeinly/users/internal/parser"
+	"github.com/madeinly/users/internal/repo"
 )
 
 func CreateUser(w http.ResponseWriter, r *http.Request) {

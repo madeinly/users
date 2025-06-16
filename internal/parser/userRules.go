@@ -7,7 +7,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/MadeSimplest/users/internal/models"
+	"github.com/madeinly/users/internal/models"
 )
 
 // ValidateEmail checks for ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$

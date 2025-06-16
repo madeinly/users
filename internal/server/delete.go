@@ -6,8 +6,8 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/MadeSimplest/users/internal/parser"
-	"github.com/MadeSimplest/users/internal/repo"
+	"github.com/madeinly/users/internal/parser"
+	"github.com/madeinly/users/internal/repo"
 )
 
 func DeleteUser(w http.ResponseWriter, r *http.Request) {
