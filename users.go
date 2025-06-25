@@ -89,6 +89,11 @@ var Routes = []coreModels.Route{
 		Handler: http.HandlerFunc(server.BulkDelete),
 		// Handler: server.AuthMiddleware(http.HandlerFunc(server.BulkDelete)),
 	},
+	{
+		Type:    "GET",
+		Pattern: "/users/check-username",
+		Handler: http.HandlerFunc(server.CheckUsername),
+	},
 }
 
 func setupUsers() error {

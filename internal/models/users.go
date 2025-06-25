@@ -23,6 +23,9 @@ type Paginated struct {
 	Data  Users `json:"data"`
 }
 
+// (I regret the day that I thought would be nice to fragment user role on in memory app)
+// all this will be deleted ->
+
 type RoleID int64
 
 const (

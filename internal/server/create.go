@@ -36,14 +36,16 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	u := repo.GetUserByUsername(user.Username)
 
 	if u.Username != "" {
-		http.Error(w, "el username ya existe", http.StatusConflict)
+		v.AddError("user_username", "el username ya existe")
+		v.RespondWithErrors(w)
 		return
 	}
 
 	u = repo.GetUserByEmail(user.Email)
 
 	if u.Username != "" {
-		http.Error(w, "el correo ya existe", http.StatusConflict)
+		v.AddError("user_email", "el correo ya existe")
+		v.RespondWithErrors(w)
 		return
 	}
 
