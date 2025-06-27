@@ -96,6 +96,6 @@ INNER JOIN user_roles ur ON u.id = ur.user_id
 LEFT JOIN users_meta um ON u.id = um.user_id AND um.meta_key = 'user_status'
 WHERE
     (:username = '' OR u.username LIKE '%' || :username || '%') AND
-    (:role_id = -1 OR ur.role_id = :role_id) AND 
+    (:role_id = 0 OR ur.role_id = :role_id) AND 
     (:status = '' OR COALESCE(um.meta_value, 'active') = :status)
 LIMIT :limit OFFSET :offset;

@@ -6,46 +6,45 @@ import (
 	"net/http"
 
 	"github.com/madeinly/users/internal/models"
-	"github.com/madeinly/users/internal/parser"
+	"github.com/madeinly/users/internal/queries/userQuery"
 	"github.com/madeinly/users/internal/repo"
 )
 
 func CreateUser(w http.ResponseWriter, r *http.Request) {
-	v := parser.NewUserParser()
+	user := models.NewUser()
 	err := r.ParseForm()
 
 	if err != nil {
-		v.AddError("_form", err.Error())
-		v.RespondWithErrors(w)
+		user.AddError("form", "The form could not be parse")
+		user.RespondErrors(w)
 		return
 	}
 
-	user := models.User{
-		Username: v.FormParse(parser.FormUsername, r).(string),
-		Email:    v.FormParse(parser.FormEmail, r).(string),
-		Password: v.FormParse(parser.FormPassword, r).(string),
-		Status:   v.FormParse(parser.FormStatus, r).(string),
-		RoleID:   v.FormParse(parser.FormRoleID, r).(models.RoleID),
-	}
+	user.AddUsername(models.ParseUserPOST(r, models.PropUserUsername))
+	user.AddEmail(models.ParseUserPOST(r, models.PropUserEmail))
+	user.AddPassword(models.ParseUserPOST(r, models.PropUserPassword))
+	user.AddStatus(models.ParseUserPOST(r, models.PropUserStatus))
+	user.AddRoleID(models.ParseUserPOST(r, models.PropUserRoleID))
 
-	if v.HasErrors() {
-		v.RespondWithErrors(w)
+	if user.HasErrors() {
+		user.RespondErrors(w)
 		return
 	}
 
-	u := repo.GetUserByUsername(user.Username)
+	var u userQuery.User
 
+	u = repo.GetUserByUsername(user.Username)
 	if u.Username != "" {
-		v.AddError("user_username", "el username ya existe")
-		v.RespondWithErrors(w)
-		return
+		user.AddError("user_username", "el username ya existe")
 	}
 
 	u = repo.GetUserByEmail(user.Email)
+	if u.Email != "" {
+		user.AddError("user_email", "el correo ya existe")
+	}
 
-	if u.Username != "" {
-		v.AddError("user_email", "el correo ya existe")
-		v.RespondWithErrors(w)
+	if user.HasErrors() {
+		user.RespondErrors(w)
 		return
 	}
 
@@ -56,6 +55,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		user.RoleID,
 		user.Status,
 	)
+
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

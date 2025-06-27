@@ -6,44 +6,44 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/madeinly/users/internal/parser"
+	"github.com/madeinly/users/internal/models"
 	"github.com/madeinly/users/internal/repo"
 )
 
 func DeleteUser(w http.ResponseWriter, r *http.Request) {
 
-	v := parser.NewUserParser()
+	user := models.NewUser()
 
 	err := r.ParseForm()
 
 	if err != nil {
-		v.AddError("_form", err.Error())
-		v.RespondWithErrors(w)
+		user.AddError("_form", err.Error())
+		user.RespondErrors(w)
 		return
 	}
 
-	userID := v.FormParse(parser.FormID, r).(string)
+	user.AddID(models.ParseUserPOST(r, models.PropUserID))
 
-	if v.HasErrors() {
-		v.RespondWithErrors(w)
+	if user.HasErrors() {
+		user.RespondErrors(w)
 		return
 	}
 
-	userExist := repo.CheckUserExist(userID)
+	userExist := repo.CheckUserExist(user.ID)
 
 	if !userExist {
-		http.Error(w, fmt.Sprintf("the user with id %s does not exist", userID), http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf("the user with id %s does not exist", user.ID), http.StatusBadRequest)
 		return
 	}
 
-	err = repo.DeleteUser(userID)
+	err = repo.DeleteUser(user.ID)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
 	w.WriteHeader(http.StatusOK)
-	fmt.Fprintf(w, "User %s  deleted successfully", userID)
+	fmt.Fprintf(w, "User %s  deleted successfully", user.ID)
 
 }
 
@@ -56,7 +56,6 @@ func BulkDelete(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	// Parse JSON
 	var request struct {
 		UserIDs []string `json:"user_ids"`
 	}
@@ -66,13 +65,13 @@ func BulkDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	v := parser.NewUserParser()
+	user := models.NewUser()
 
 	for _, userID := range request.UserIDs {
-		userID := v.ValidateID(userID)
+		user.AddID(userID)
 
-		if v.HasErrors() {
-			v.RespondWithErrors(w)
+		if user.HasErrors() {
+			user.RespondErrors(w)
 			return
 		}
 

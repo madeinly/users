@@ -6,49 +6,47 @@ import (
 
 	"github.com/madeinly/users/internal/models"
 	"github.com/madeinly/users/internal/repo"
-
-	"github.com/madeinly/users/internal/parser"
 )
 
 func GetUser(w http.ResponseWriter, r *http.Request) {
 
-	v := parser.NewUserParser()
+	user := models.NewUser()
 
 	err := r.ParseForm()
 
 	if err != nil {
-		v.AddError("_form", err.Error())
-		v.RespondWithErrors(w)
+		user.AddError("form", "could not parse the form")
+		user.RespondErrors(w)
 		return
 	}
 
-	userID := v.FormParse(parser.FormID, r).(string)
+	user.AddID(models.ParseUserGET(r, models.PropUserID))
 
-	if v.HasErrors() {
-		v.RespondWithErrors(w)
+	if user.HasErrors() {
+		user.RespondErrors(w)
 		return
 	}
 
-	user, err := repo.GetUserByID(userID)
+	u, err := repo.GetUserByID(user.ID)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	if user.ID == "" {
-		http.Error(w, "No existe usuario con el id: "+userID, http.StatusNotFound)
+	if u.ID == "" {
+		http.Error(w, "No existe usuario con el id: "+user.ID, http.StatusNotFound)
 		return
 	}
 
 	roleID := models.RoleID(user.RoleID)
 
 	var resUser models.User = models.User{
-		ID:       user.ID,
-		Username: user.Username,
-		Email:    user.Email,
+		ID:       u.ID,
+		Username: u.Username,
+		Email:    u.Email,
 		RoleID:   roleID,
-		Status:   user.UserStatus,
+		Status:   u.UserStatus,
 		RoleName: roleID.GetRoleName(),
 	}
 

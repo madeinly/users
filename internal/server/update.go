@@ -6,25 +6,22 @@ import (
 
 	"github.com/madeinly/users/internal/auth"
 	"github.com/madeinly/users/internal/models"
-	"github.com/madeinly/users/internal/parser"
 	"github.com/madeinly/users/internal/repo"
 )
 
 func UpdateUser(w http.ResponseWriter, r *http.Request) {
 
-	v := parser.NewUserParser()
+	user := models.NewUser()
 	err := r.ParseForm()
 
 	if err != nil {
-		v.AddError("_form", err.Error())
-		v.RespondWithErrors(w)
+		user.AddError("_form", err.Error())
+		user.RespondErrors(w)
 		return
 	}
 
-	user := models.User{}
-
-	if _, exists := r.PostForm[string(parser.FormID)]; exists {
-		user.ID = v.FormParse(parser.FormID, r).(string)
+	if _, exists := r.PostForm[string(models.PropUserID)]; exists {
+		user.AddID(models.ParseUserPOST(r, models.PropUserID))
 	}
 
 	u, _ := repo.GetUserByID(user.ID)
@@ -34,44 +31,44 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, exists := r.PostForm[string(parser.FormEmail)]; exists {
-		user.Email = v.FormParse(parser.FormEmail, r).(string)
+	if _, exists := r.PostForm[string(models.PropUserEmail)]; exists {
+		user.AddEmail(models.ParseUserPOST(r, models.PropUserEmail))
 	} else {
 		user.Email = u.Email
 	}
 
-	if _, exists := r.PostForm[string(parser.FormStatus)]; exists {
-		user.Status = v.FormParse(parser.FormStatus, r).(string)
+	if _, exists := r.PostForm[string(models.PropUserStatus)]; exists {
+		user.AddStatus(models.ParseUserPOST(r, models.PropUserStatus))
 	} else {
 		user.Status = u.UserStatus
 	}
 
-	if _, exists := r.PostForm[string(parser.FormRoleID)]; exists {
-		user.RoleID = v.FormParse(parser.FormRoleID, r).(models.RoleID)
+	if _, exists := r.PostForm[string(models.PropUserRoleID)]; exists {
+		user.AddRoleID(models.ParseUserPOST(r, models.PropUserRoleID))
 	} else {
 		user.RoleID = models.RoleID(u.RoleID)
 	}
 
-	if _, exists := r.PostForm[string(parser.FormUsername)]; exists {
-		user.Username = v.FormParse(parser.FormUsername, r).(string)
+	if _, exists := r.PostForm[string(models.PropUserUsername)]; exists {
+		user.AddUsername(models.ParseUserPOST(r, models.PropUserUsername))
 	} else {
 		user.Username = u.Username
 	}
 
-	if _, exists := r.PostForm[string(parser.FormPassword)]; exists {
-		user.Password = v.FormParse(parser.FormPassword, r).(string)
+	if _, exists := r.PostForm[string(models.PropUserPassword)]; exists {
+		user.AddPassword(models.ParseUserPOST(r, models.PropUserPassword))
 		user.Password, err = auth.HashPassword(user.Password)
 
 		if err != nil {
-			v.AddError(parser.FormPassword, err.Error())
+			user.AddError(models.PropUserPassword, "Could not store your password")
 		}
 
 	} else {
 		user.Password = u.Password
 	}
 
-	if v.HasErrors() {
-		v.RespondWithErrors(w)
+	if user.HasErrors() {
+		user.RespondErrors(w)
 		return
 	}
 

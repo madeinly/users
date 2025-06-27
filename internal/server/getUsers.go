@@ -12,41 +12,35 @@ import (
 
 func GetUsers(w http.ResponseWriter, r *http.Request) {
 
-	v := parser.NewUserParser()
-
-	//default values
-	var limit = int64(-1)
-	var page = int64(1)
-	var userStatus = ""
-	var roleID = models.RoleID(-1)
-	var username = ""
+	user := models.NewUser()
+	pagination := parser.NewPagination()
 
 	if _, exists := r.URL.Query()[parser.FormUserLimit]; exists {
-		limit = v.FormParse(parser.FormUserLimit, r).(int64)
+		pagination.AddLimit(r.URL.Query().Get("user_limit"))
 	}
 
 	if _, exists := r.URL.Query()[parser.FormUserPage]; exists {
-		page = v.FormParse(parser.FormUserPage, r).(int64)
+		pagination.AddPage(r.URL.Query().Get("user_page"))
 	}
 
-	if _, exists := r.URL.Query()[string(parser.FormStatus)]; exists {
-		userStatus = v.FormParse(parser.FormStatus, r).(string)
+	if _, exists := r.URL.Query()[string(models.PropUserStatus)]; exists {
+		user.AddStatus(models.ParseUserGET(r, models.PropUserStatus))
 	}
 
-	if _, exists := r.URL.Query()[string(parser.FormRoleID)]; exists {
-		roleID = v.FormParse(parser.FormRoleID, r).(models.RoleID)
+	if _, exists := r.URL.Query()[string(models.PropUserRoleID)]; exists {
+		user.AddRoleID(models.ParseUserGET(r, models.PropUserRoleID))
 	}
 
-	if _, exists := r.URL.Query()[string(parser.FormUsername)]; exists {
-		username = r.URL.Query().Get(string(parser.FormUsername))
+	if _, exists := r.URL.Query()[string(models.PropUserUsername)]; exists {
+		user.AddUsername(models.ParseUserGET(r, models.PropUserUsername))
 	}
 
-	if v.HasErrors() {
-		v.RespondWithErrors(w)
+	if user.HasErrors() {
+		user.RespondErrors(w)
 		return
 	}
 
-	totalUsers, err := repo.GetUsers(username, int64(roleID), userStatus, -1, 0)
+	totalUsers, err := repo.GetUsers(user.Username, int64(user.RoleID), user.Status, -1, 0)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -59,15 +53,15 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pages := int(math.Ceil(float64(countUsers) / float64(limit)))
+	pages := int(math.Ceil(float64(countUsers) / float64(pagination.Limit)))
 
-	if limit == -1 {
+	if pagination.Limit == -1 {
 		pages = 1
 	}
 
-	offset := limit * (page - 1)
+	offset := pagination.Limit * (pagination.Page - 1)
 
-	repoUsers, err := repo.GetUsers(username, int64(roleID), userStatus, int64(limit), int64(offset))
+	repoUsers, err := repo.GetUsers(user.Username, int64(user.RoleID), user.Status, pagination.Limit, int64(offset))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

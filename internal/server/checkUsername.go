@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/madeinly/users/internal/parser"
+	"github.com/madeinly/users/internal/models"
 	"github.com/madeinly/users/internal/repo"
 )
 
@@ -12,21 +12,21 @@ func CheckUsername(w http.ResponseWriter, r *http.Request) {
 	// Set content type
 	w.Header().Set("Content-Type", "application/json")
 
-	v := parser.NewUserParser()
+	user := models.NewUser()
 	err := r.ParseForm()
 	if err != nil {
-		v.AddError("_form", err.Error())
-		v.RespondWithErrors(w)
+		user.AddError("form", err.Error())
+		user.RespondErrors(w)
 	}
 
-	username := v.FormParse(parser.FormUsername, r).(string)
+	user.AddUsername(models.ParseUserGET(r, models.PropUserUsername))
 
-	if v.HasErrors() {
-		v.RespondWithErrors(w)
+	if user.HasErrors() {
+		user.RespondErrors(w)
 		return
 	}
 
-	u := repo.GetUserByUsername(username)
+	u := repo.GetUserByUsername(user.Username)
 	if u.Username == "" {
 		w.WriteHeader(http.StatusNotFound)
 		json.NewEncoder(w).Encode(map[string]interface{}{

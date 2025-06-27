@@ -1,44 +1,61 @@
 package parser
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 )
+
+type pagination struct {
+	Limit int64
+	Page  int64
+}
 
 const (
 	FormUserPage  = "user_page"
 	FormUserLimit = "user_limit"
 )
 
-func (v *UserParseErrors) ValidateUserPage(page string) int64 {
-	const minLen = 1
-
-	if len(page) < minLen {
-		v.AddError(FormUserPage, fmt.Sprintf("must be at least %d characters", minLen))
+func NewPagination() pagination {
+	pagination := pagination{
+		Limit: -1,
+		Page:  1,
 	}
 
-	pageInt, err := strconv.ParseInt(page, 10, 64)
-
-	if err != nil {
-		v.AddError(FormUserPage, err.Error())
-		return 1
-	}
-
-	return pageInt
+	return pagination
 }
 
-func (v *UserParseErrors) ValidateUserLimit(limitSTR string) int64 {
+func (pagination *pagination) AddPage(page string) error {
 	const minLen = 1
 
-	if len(limitSTR) < minLen {
-		v.AddError(FormUserLimit, fmt.Sprintf("must be at least %d characters", minLen))
+	var err error
+
+	if len(page) < minLen {
+		return errors.New(fmt.Sprintf("must be at least %d characters", minLen))
 	}
 
-	limit, err := strconv.ParseInt(limitSTR, 10, 64)
+	pagination.Page, err = strconv.ParseInt(page, 10, 64)
 
 	if err != nil {
-		v.AddError(FormUserLimit, err.Error())
+		return err
 	}
 
-	return limit
+	return nil
+}
+
+func (pagination *pagination) AddLimit(limit string) error {
+	const minLen = 1
+
+	var err error
+	if len(limit) < minLen {
+		errors.New(fmt.Sprintf("must be at least %d characters", minLen))
+	}
+
+	pagination.Limit, err = strconv.ParseInt(limit, 10, 64)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
