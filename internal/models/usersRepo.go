@@ -69,7 +69,7 @@ func (repo *SqliteRepo) List(username string, roleID int64, status string, limit
 		Username: username,
 		RoleID: sql.NullInt64{
 			Int64: roleID,
-			Valid: roleID != 0,
+			Valid: true,
 		},
 		Status: status,
 		Limit:  limit,
@@ -77,9 +77,10 @@ func (repo *SqliteRepo) List(username string, roleID int64, status string, limit
 	}
 
 	us, err := query.GetUsers(ctx, params)
+
 	if err != nil {
-		fmt.Println(err.Error())
-		return nil //Pensar si quiero enviar nil o si quiero enviar un arreglo vacio
+		fmt.Println("the error was", err.Error())
+		return nil
 	}
 
 	users := make([]user, 0, len(us))

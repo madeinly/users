@@ -2,7 +2,6 @@ package server
 
 import (
 	"encoding/json"
-	"fmt"
 	"math"
 	"net/http"
 
@@ -44,8 +43,6 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 	totalUsers := repo.List(user.Username, int64(user.RoleID), user.Status, -1, 0)
 
 	countUsers := len(totalUsers)
-
-	fmt.Println(countUsers)
 
 	if countUsers == 0 {
 		w.WriteHeader(http.StatusNoContent)
