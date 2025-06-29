@@ -6,7 +6,6 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/madeinly/core"
 	"github.com/madeinly/users/internal/models"
 )
 
@@ -29,7 +28,7 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	repo := models.NewRepo(core.DB())
+	repo := models.NewRepo()
 
 	userExist := repo.CheckExist(user.ID)
 
@@ -77,7 +76,7 @@ func BulkDelete(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		repo := models.NewRepo(core.DB())
+		repo := models.NewRepo()
 
 		userExist := repo.CheckExist(userID)
 

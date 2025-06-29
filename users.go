@@ -4,21 +4,12 @@ import (
 	_ "embed"
 	"net/http"
 
-	"github.com/madeinly/core"
 	coreModels "github.com/madeinly/core/models"
 	"github.com/madeinly/users/internal/models"
 
 	"github.com/madeinly/users/internal/cmd"
-	"github.com/madeinly/users/internal/queries/userQuery"
 	"github.com/madeinly/users/internal/server"
 )
-
-type api struct {
-	Create func(username string, email string, password string, roleID models.RoleID, status string) (string, error)
-	Update func(userID string, password string, email string, userStatus string, roleID int64, username string) error
-	Get    func(username string, roleID int64, status string, limit int64, offset int64) ([]userQuery.GetUsersRow, error)
-	Auth   func(email string, password string) (bool, string)
-}
 
 var UserMigration = coreModels.Migration{
 	Schema: initialSchema,
@@ -91,7 +82,7 @@ var Routes = []coreModels.Route{
 
 func setupUsers() error {
 
-	repo := models.NewRepo(core.DB())
+	repo := models.NewRepo()
 
 	_, err := repo.Create("admin", "admin@example.com", "qwer1234", models.RoleID(1), "active")
 

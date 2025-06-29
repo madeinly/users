@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/madeinly/core"
 	"github.com/madeinly/users/internal/models"
 )
 
@@ -27,14 +26,9 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	repo := models.NewRepo(core.DB())
+	repo := models.NewRepo()
 
 	u := repo.GetByID(user.ID)
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
 
 	if u.ID == "" {
 		http.Error(w, "No existe usuario con el id: "+user.ID, http.StatusNotFound)

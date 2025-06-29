@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/madeinly/core"
 	"github.com/madeinly/users/internal/models"
 )
 
@@ -30,7 +29,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	repo := models.NewRepo(core.DB())
+	repo := models.NewRepo()
 
 	u := repo.GetByUsername(user.Username)
 	if u.Username != "" {

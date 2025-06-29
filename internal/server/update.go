@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/madeinly/core"
 	"github.com/madeinly/users/internal/auth"
 	"github.com/madeinly/users/internal/models"
 )
@@ -24,7 +23,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		user.AddID(models.ParseUserPOST(r, models.PropUserID))
 	}
 
-	repo := models.NewRepo(core.DB())
+	repo := models.NewRepo()
 
 	u := repo.GetByID(user.ID)
 

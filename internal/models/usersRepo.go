@@ -29,9 +29,9 @@ type SqliteRepo struct {
 	db *sql.DB
 }
 
-func NewRepo(conn *sql.DB) SqliteRepo {
+func NewRepo() SqliteRepo {
 	return SqliteRepo{
-		db: conn,
+		db: core.DB(),
 	}
 
 }
