@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/madeinly/core"
 	"github.com/madeinly/users/internal/models"
-	"github.com/madeinly/users/internal/repo"
 )
 
 func GetUser(w http.ResponseWriter, r *http.Request) {
@@ -27,7 +27,9 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	u, err := repo.GetUserByID(user.ID)
+	repo := models.NewRepo(core.DB())
+
+	u := repo.GetByID(user.ID)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -39,16 +41,14 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	roleID := models.RoleID(user.RoleID)
+	resUser := models.NewUser()
 
-	var resUser models.User = models.User{
-		ID:       u.ID,
-		Username: u.Username,
-		Email:    u.Email,
-		RoleID:   roleID,
-		Status:   u.UserStatus,
-		RoleName: roleID.GetRoleName(),
-	}
+	resUser.ID = u.ID
+	resUser.Username = u.Username
+	resUser.Email = u.Email
+	resUser.RoleID = u.RoleID
+	resUser.Status = u.Status
+	resUser.RoleName = u.RoleID.GetRoleName()
 
 	w.Header().Set("Content-Type", "application/json")
 

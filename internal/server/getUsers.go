@@ -2,24 +2,24 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"math"
 	"net/http"
 
+	"github.com/madeinly/core"
 	"github.com/madeinly/users/internal/models"
-	"github.com/madeinly/users/internal/parser"
-	"github.com/madeinly/users/internal/repo"
 )
 
 func GetUsers(w http.ResponseWriter, r *http.Request) {
 
 	user := models.NewUser()
-	pagination := parser.NewPagination()
+	pagination := models.NewPagination()
 
-	if _, exists := r.URL.Query()[parser.FormUserLimit]; exists {
+	if _, exists := r.URL.Query()["limit"]; exists {
 		pagination.AddLimit(r.URL.Query().Get("user_limit"))
 	}
 
-	if _, exists := r.URL.Query()[parser.FormUserPage]; exists {
+	if _, exists := r.URL.Query()["page"]; exists {
 		pagination.AddPage(r.URL.Query().Get("user_page"))
 	}
 
@@ -40,13 +40,13 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	totalUsers, err := repo.GetUsers(user.Username, int64(user.RoleID), user.Status, -1, 0)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	repo := models.NewRepo(core.DB())
+
+	totalUsers := repo.List(user.Username, int64(user.RoleID), user.Status, -1, 0)
 
 	countUsers := len(totalUsers)
+
+	fmt.Println(countUsers)
 
 	if countUsers == 0 {
 		w.WriteHeader(http.StatusNoContent)
@@ -61,25 +61,23 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 
 	offset := pagination.Limit * (pagination.Page - 1)
 
-	repoUsers, err := repo.GetUsers(user.Username, int64(user.RoleID), user.Status, pagination.Limit, int64(offset))
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	repoUsers := repo.List(user.Username, int64(user.RoleID), user.Status, pagination.Limit, int64(offset))
 
 	var usersTable models.Users
 
-	for _, user := range repoUsers {
+	for _, u := range repoUsers {
 
-		usersTable = append(usersTable, models.User{
+		user := models.NewUser()
 
-			ID:       user.ID,
-			Email:    user.Email,
-			Username: user.Username,
-			Status:   user.StatusName.String,
-			RoleID:   models.RoleID(user.RoleID),
-			RoleName: models.RoleID(user.RoleID).GetRoleName(),
-		})
+		user.ID = u.ID
+		user.Email = u.Email
+		user.Username = u.Username
+		user.Status = u.Status
+		user.RoleID = u.RoleID
+		user.RoleName = u.RoleID.GetRoleName()
+
+		usersTable = append(usersTable, user)
+
 	}
 
 	usersPaginated := models.Paginated{

@@ -1,9 +1,13 @@
 package auth
 
 import (
-	"time"
+	"context"
+	"database/sql"
+	"errors"
+	"log"
 
-	"github.com/golang-jwt/jwt/v5"
+	"github.com/madeinly/core"
+	"github.com/madeinly/users/internal/queries/userQuery"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -24,43 +28,46 @@ func HashPassword(p string) (string, error) {
 
 }
 
-var JwtSecret = []byte("2F249F8ABE73F2588EEDAE94E75B2")
+// func ValidateToken(tokenString string) (*Claims, error) {
 
-type Claims struct {
-	UserID string `json:"user_id"`
-	Email  string `json:"email"`
-	jwt.RegisteredClaims
-}
+// 	claims := &Claims{}
 
-func GenerateToken(userID string, email string) (string, error) {
-	claims := &Claims{
-		UserID: userID,
-		Email:  email,
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
-			Issuer:    "AgenciaDigitalST",
-		},
-	}
+// 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+// 		return JwtSecret, nil
+// 	})
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(JwtSecret)
-}
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-func ValidateToken(tokenString string) (*Claims, error) {
+// 	if !token.Valid {
+// 		return nil, err
+// 	}
 
-	claims := &Claims{}
+// 	return claims, nil
+// }
 
-	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-		return JwtSecret, nil
-	})
+func ValidateCredentials(email string, password string) (bool, string) {
+	ctx := context.Background()
 
+	// Initialize queries with your database connection
+	queries := userQuery.New(core.DB()) // Assuming db.Connection is *sql.DB
+
+	// Get user by email using sqlc generated query
+	user, err := queries.GetUserByEmail(ctx, email)
 	if err != nil {
-		return nil, err
+		if errors.Is(err, sql.ErrNoRows) {
+			return false, ""
+		}
+		log.Printf("Database error: %v", err)
+		return false, ""
 	}
 
-	if !token.Valid {
-		return nil, err
+	// Compare password hash
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+	if err != nil {
+		return false, ""
 	}
 
-	return claims, nil
+	return true, user.ID
 }

@@ -2,30 +2,6 @@ package models
 
 import "fmt"
 
-type Users []User
-
-type User struct {
-	ID       string     `json:"ID"`
-	Username string     `json:"username"`
-	Email    string     `json:"email"`
-	Status   string     `json:"status"`
-	Password string     `json:"password,omitempty"`
-	RoleID   RoleID     `json:"roleID,omitempty"`
-	RoleName string     `json:"roleName,omitempty"`
-	Metas    *UserMetas `json:"metas,omitempty"`
-}
-
-type UserMetas map[string]string
-
-type Paginated struct {
-	Pages int   `json:"pages"`
-	Items int   `json:"items"`
-	Data  Users `json:"data"`
-}
-
-// (I regret the day that I thought would be nice to fragment user role on in memory app)
-// all this will be deleted ->
-
 type RoleID int64
 
 const (

@@ -13,6 +13,8 @@ import (
 
 type UserProp string
 
+type UserMetas map[string]string
+
 const (
 	PropUserID       UserProp = "user_id"
 	PropUserRoleID   UserProp = "user_role_id"
@@ -21,11 +23,14 @@ const (
 	PropUserUsername UserProp = "user_username"
 	PropUserPassword UserProp = "user_password"
 	PropUserRoleName UserProp = "user_role_name"
+	PropUserForm     UserProp = "user_form"
 )
 
 type UserError map[string]string
 
-type pseudoUser struct {
+type Users []user
+
+type user struct {
 	ID         string      `json:"ID"`
 	Username   string      `json:"username"`
 	Email      string      `json:"email"`
@@ -33,12 +38,12 @@ type pseudoUser struct {
 	Password   string      `json:"password,omitempty"`
 	RoleID     RoleID      `json:"roleID,omitempty"`
 	RoleName   string      `json:"roleName,omitempty"`
-	Metas      *UserMetas  `json:"metas,omitempty"`
+	Metas      UserMetas   `json:"metas,omitempty"`
 	UserErrors []UserError `json:"user_error,omitempty"`
 }
 
-func NewUser() pseudoUser {
-	u := pseudoUser{
+func NewUser() user {
+	u := user{
 		UserErrors: []UserError{},
 	}
 
@@ -55,7 +60,7 @@ func ParseUserGET(r *http.Request, prop UserProp) string {
 
 // Error handler for users
 
-func (u *pseudoUser) AddError(prop UserProp, userError string) {
+func (u *user) AddError(prop UserProp, userError string) {
 
 	newError := UserError{
 		string(prop): userError,
@@ -64,12 +69,12 @@ func (u *pseudoUser) AddError(prop UserProp, userError string) {
 	u.UserErrors = append(u.UserErrors, newError)
 }
 
-func (u pseudoUser) HasErrors() bool {
+func (u user) HasErrors() bool {
 	return len(u.UserErrors) > 0
 
 }
 
-func (u pseudoUser) RespondErrors(w http.ResponseWriter) {
+func (u user) RespondErrors(w http.ResponseWriter) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusBadRequest)
@@ -84,7 +89,7 @@ func (u pseudoUser) RespondErrors(w http.ResponseWriter) {
 Checks that the userID has the correct structure (min length 7 characters), add errors message
 if fail any of the requirements (DOES NOT CHANGE THE Username, ONLY READS)
 */
-func (u *pseudoUser) AddUsername(username string) {
+func (u *user) AddUsername(username string) {
 
 	const minLen = 7
 
@@ -97,7 +102,7 @@ func (u *pseudoUser) AddUsername(username string) {
 
 }
 
-func (u *pseudoUser) AddPassword(password string) {
+func (u *user) AddPassword(password string) {
 	const minLen = 8
 
 	if len(password) < minLen {
@@ -109,7 +114,7 @@ func (u *pseudoUser) AddPassword(password string) {
 
 }
 
-func (u *pseudoUser) AddStatus(status string) {
+func (u *user) AddStatus(status string) {
 
 	allowed := []string{"active", "inactive"}
 	valid := slices.Contains(allowed, status)
@@ -123,7 +128,7 @@ func (u *pseudoUser) AddStatus(status string) {
 
 }
 
-func (u *pseudoUser) AddEmail(email string) {
+func (u *user) AddEmail(email string) {
 
 	emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
 
@@ -134,7 +139,7 @@ func (u *pseudoUser) AddEmail(email string) {
 	u.Email = email
 }
 
-func (u *pseudoUser) AddID(id string) {
+func (u *user) AddID(id string) {
 
 	const exactLen = 36
 	id = strings.TrimSpace(id)
@@ -147,7 +152,7 @@ func (u *pseudoUser) AddID(id string) {
 	u.ID = id
 }
 
-func (u *pseudoUser) AddRoleID(roleID string) {
+func (u *user) AddRoleID(roleID string) {
 
 	// Handle empty value (use default if needed)
 	if roleID == "" {

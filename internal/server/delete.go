@@ -6,8 +6,8 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/madeinly/core"
 	"github.com/madeinly/users/internal/models"
-	"github.com/madeinly/users/internal/repo"
 )
 
 func DeleteUser(w http.ResponseWriter, r *http.Request) {
@@ -29,14 +29,16 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userExist := repo.CheckUserExist(user.ID)
+	repo := models.NewRepo(core.DB())
+
+	userExist := repo.CheckExist(user.ID)
 
 	if !userExist {
 		http.Error(w, fmt.Sprintf("the user with id %s does not exist", user.ID), http.StatusBadRequest)
 		return
 	}
 
-	err = repo.DeleteUser(user.ID)
+	err = repo.Delete(user.ID)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -75,14 +77,16 @@ func BulkDelete(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		userExist := repo.CheckUserExist(userID)
+		repo := models.NewRepo(core.DB())
+
+		userExist := repo.CheckExist(userID)
 
 		if !userExist {
 			http.Error(w, fmt.Sprintf("the user with id %s does not exist", userID), http.StatusBadRequest)
 			continue
 		}
 
-		err = repo.DeleteUser(userID)
+		err = repo.Delete(userID)
 
 		if err != nil {
 			http.Error(w, fmt.Sprintf("the user %s could not be deleted", userID), http.StatusInternalServerError)

@@ -4,12 +4,12 @@ import (
 	_ "embed"
 	"net/http"
 
+	"github.com/madeinly/core"
 	coreModels "github.com/madeinly/core/models"
 	"github.com/madeinly/users/internal/models"
 
 	"github.com/madeinly/users/internal/cmd"
 	"github.com/madeinly/users/internal/queries/userQuery"
-	"github.com/madeinly/users/internal/repo"
 	"github.com/madeinly/users/internal/server"
 )
 
@@ -18,13 +18,6 @@ type api struct {
 	Update func(userID string, password string, email string, userStatus string, roleID int64, username string) error
 	Get    func(username string, roleID int64, status string, limit int64, offset int64) ([]userQuery.GetUsersRow, error)
 	Auth   func(email string, password string) (bool, string)
-}
-
-var Api = api{
-	repo.CreateUser,
-	repo.UpdateUser,
-	repo.GetUsers,
-	repo.Auth,
 }
 
 var UserMigration = coreModels.Migration{
@@ -70,7 +63,7 @@ var Routes = []coreModels.Route{
 	{
 		Type:    "POST",
 		Pattern: "/user/auth",
-		Handler: http.HandlerFunc(server.Auth),
+		Handler: http.HandlerFunc(server.Authenticate),
 	},
 	{
 		Type:    "DELETE",
@@ -78,11 +71,11 @@ var Routes = []coreModels.Route{
 		Handler: http.HandlerFunc(server.DeleteUser),
 		// Handler: server.AuthMiddleware(http.HandlerFunc(server.DeleteUser)),
 	},
-	{
-		Type:    "POST",
-		Pattern: "/user/validate",
-		Handler: http.HandlerFunc(server.ValidateCookie),
-	},
+	// {
+	// 	Type:    "POST",
+	// 	Pattern: "/user/validate",
+	// 	Handler: http.HandlerFunc(server.ValidateCookie),
+	// },
 	{
 		Type:    "DELETE",
 		Pattern: "/users",
@@ -98,7 +91,9 @@ var Routes = []coreModels.Route{
 
 func setupUsers() error {
 
-	_, err := Api.Create("admin", "admin@example.com", "qwer1234", models.RoleID(1), "active")
+	repo := models.NewRepo(core.DB())
+
+	_, err := repo.Create("admin", "admin@example.com", "qwer1234", models.RoleID(1), "active")
 
 	if err != nil {
 		return err

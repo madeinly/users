@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/madeinly/core"
 	"github.com/madeinly/users/internal/models"
-	"github.com/madeinly/users/internal/queries/userQuery"
-	"github.com/madeinly/users/internal/repo"
 )
 
 func CreateUser(w http.ResponseWriter, r *http.Request) {
@@ -31,14 +30,14 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var u userQuery.User
+	repo := models.NewRepo(core.DB())
 
-	u = repo.GetUserByUsername(user.Username)
+	u := repo.GetByUsername(user.Username)
 	if u.Username != "" {
 		user.AddError("user_username", "el username ya existe")
 	}
 
-	u = repo.GetUserByEmail(user.Email)
+	u = repo.GetByEmail(user.Email)
 	if u.Email != "" {
 		user.AddError("user_email", "el correo ya existe")
 	}
@@ -48,7 +47,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	uuid, err := repo.CreateUser(
+	uuid, err := repo.Create(
 		user.Username,
 		user.Email,
 		user.Password,

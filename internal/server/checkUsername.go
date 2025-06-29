@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/madeinly/core"
 	"github.com/madeinly/users/internal/models"
-	"github.com/madeinly/users/internal/repo"
 )
 
 func CheckUsername(w http.ResponseWriter, r *http.Request) {
@@ -26,7 +26,9 @@ func CheckUsername(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	u := repo.GetUserByUsername(user.Username)
+	repo := models.NewRepo(core.DB())
+
+	u := repo.GetByUsername(user.Username)
 	if u.Username == "" {
 		w.WriteHeader(http.StatusNotFound)
 		json.NewEncoder(w).Encode(map[string]interface{}{

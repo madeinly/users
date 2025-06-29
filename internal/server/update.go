@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/madeinly/core"
 	"github.com/madeinly/users/internal/auth"
 	"github.com/madeinly/users/internal/models"
-	"github.com/madeinly/users/internal/repo"
 )
 
 func UpdateUser(w http.ResponseWriter, r *http.Request) {
@@ -15,7 +15,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 
 	if err != nil {
-		user.AddError("_form", err.Error())
+		user.AddError("form", err.Error())
 		user.RespondErrors(w)
 		return
 	}
@@ -24,7 +24,9 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		user.AddID(models.ParseUserPOST(r, models.PropUserID))
 	}
 
-	u, _ := repo.GetUserByID(user.ID)
+	repo := models.NewRepo(core.DB())
+
+	u := repo.GetByID(user.ID)
 
 	if u.ID == "" {
 		http.Error(w, "User not found", http.StatusNotFound)
@@ -40,7 +42,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	if _, exists := r.PostForm[string(models.PropUserStatus)]; exists {
 		user.AddStatus(models.ParseUserPOST(r, models.PropUserStatus))
 	} else {
-		user.Status = u.UserStatus
+		user.Status = u.Status
 	}
 
 	if _, exists := r.PostForm[string(models.PropUserRoleID)]; exists {
@@ -72,7 +74,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := repo.UpdateUser(user.ID, user.Password, user.Email, user.Status, int64(user.RoleID), user.Username); err != nil {
+	if err := repo.Update(user.ID, user.Password, user.Email, user.Status, int64(user.RoleID), user.Username); err != nil {
 		fmt.Println(err.Error())
 		http.Error(w, "Failed to update user", http.StatusServiceUnavailable)
 		return
