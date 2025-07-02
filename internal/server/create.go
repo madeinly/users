@@ -5,54 +5,57 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/madeinly/users/internal/models"
+	"github.com/madeinly/users/internal/repository"
+	"github.com/madeinly/users/internal/user"
 )
 
 func CreateUser(w http.ResponseWriter, r *http.Request) {
-	user := models.NewUser()
+
+	uv := user.NewUserValidator()
 	err := r.ParseForm()
 
 	if err != nil {
-		user.AddError("form", "The form could not be parse")
-		user.RespondErrors(w)
+		uv.AddError("badRequest", "The form could not be parse", user.PropUserForm)
+		uv.RespondErrors(w)
 		return
 	}
 
-	user.AddUsername(models.ParseUserPOST(r, models.PropUserUsername))
-	user.AddEmail(models.ParseUserPOST(r, models.PropUserEmail))
-	user.AddPassword(models.ParseUserPOST(r, models.PropUserPassword))
-	user.AddStatus(models.ParseUserPOST(r, models.PropUserStatus))
-	user.AddRoleID(models.ParseUserPOST(r, models.PropUserRoleID))
+	username := r.FormValue(user.PropUserUsername)
+	email := r.FormValue(user.PropUserEmail)
+	password := r.FormValue(user.PropUserPassword)
+	status := r.FormValue(user.PropUserStatus)
+	roleID := r.FormValue(user.PropUserRoleID)
 
-	if user.HasErrors() {
-		user.RespondErrors(w)
+	if uv.HasErrors() {
+		uv.RespondErrors(w)
 		return
 	}
 
-	repo := models.NewRepo()
+	repo := repository.NewUserRepo()
 
-	u := repo.GetByUsername(user.Username)
-	if u.Username != "" {
-		user.AddError("user_username", "el username ya existe")
+	u := repo.GetByUsername(username)
+
+	if !u.IsEmpty() {
+		uv.AddError("conflict", "el username ya existe", user.PropUserUsername)
 	}
 
-	u = repo.GetByEmail(user.Email)
-	if u.Email != "" {
-		user.AddError("user_email", "el correo ya existe")
+	u = repo.GetByEmail(email)
+	if !u.IsEmpty() {
+		uv.AddError("conflict", "el correo ya existe", user.PropUserEmail)
 	}
 
-	if user.HasErrors() {
-		user.RespondErrors(w)
+	if uv.HasErrors() {
+		uv.RespondErrors(w)
 		return
 	}
 
-	uuid, err := repo.Create(
-		user.Username,
-		user.Email,
-		user.Password,
-		user.RoleID,
-		user.Status,
-	)
+	uuid, err := repo.Create(repository.UserArgs{
+		Username: username,
+		Email:    email,
+		Status:   status,
+		RoleID:   roleID,
+		Password: password,
+	})
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -63,6 +66,6 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]string{
 		"uuid":    uuid,
-		"message": fmt.Sprintf("User %s created successfully", user.Username),
+		"message": fmt.Sprintf("User %s created successfully", username),
 	})
 }

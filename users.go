@@ -5,10 +5,11 @@ import (
 	"net/http"
 
 	coreModels "github.com/madeinly/core/models"
-	"github.com/madeinly/users/internal/models"
 
 	"github.com/madeinly/users/internal/cmd"
+	"github.com/madeinly/users/internal/repository"
 	"github.com/madeinly/users/internal/server"
+	"github.com/madeinly/users/internal/user"
 )
 
 var UserMigration = coreModels.Migration{
@@ -23,7 +24,7 @@ var Feature = coreModels.FeaturePackage{
 	Cmd:       cmd.Execute,
 }
 
-//go:embed internal/initial_schema.sql
+//go:embed internal/queries/initial_schema.sql
 var initialSchema string
 
 var Routes = []coreModels.Route{
@@ -82,9 +83,15 @@ var Routes = []coreModels.Route{
 
 func setupUsers() error {
 
-	repo := models.NewRepo()
+	repo := repository.NewUserRepo()
 
-	_, err := repo.Create("admin", "admin@example.com", "qwer1234", models.RoleID(1), "active")
+	_, err := repo.Create(repository.UserArgs{
+		Username: "admin",
+		Email:    "admin@example.com",
+		Password: "qwer1234",
+		RoleID:   string(user.RoleAdmin),
+		Status:   "active",
+	})
 
 	if err != nil {
 		return err

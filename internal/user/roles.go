@@ -1,4 +1,4 @@
-package models
+package user
 
 import "fmt"
 
@@ -7,7 +7,6 @@ type RoleID int64
 const (
 	RoleAdmin RoleID = 1
 	RoleUser  RoleID = 2
-	// Future roles can be added here
 )
 
 type UserRole struct {

@@ -4,31 +4,34 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/madeinly/users/internal/models"
+	"github.com/madeinly/users/internal/repository"
+	"github.com/madeinly/users/internal/user"
 )
 
 func CheckUsername(w http.ResponseWriter, r *http.Request) {
-	// Set content type
-	w.Header().Set("Content-Type", "application/json")
 
-	user := models.NewUser()
+	uv := user.NewUserValidator()
+
 	err := r.ParseForm()
 	if err != nil {
-		user.AddError("form", err.Error())
-		user.RespondErrors(w)
+		uv.AddError("BadRequest", err.Error(), user.PropUserForm)
+		uv.RespondErrors(w)
 	}
 
-	user.AddUsername(models.ParseUserGET(r, models.PropUserUsername))
+	username := r.URL.Query().Get(user.PropUserUsername)
 
-	if user.HasErrors() {
-		user.RespondErrors(w)
+	uv.ValidUsername(username)
+
+	if uv.HasErrors() {
+		uv.RespondErrors(w)
 		return
 	}
 
-	repo := models.NewRepo()
+	repo := repository.NewUserRepo()
 
-	u := repo.GetByUsername(user.Username)
-	if u.Username == "" {
+	u := repo.GetByUsername(username)
+
+	if u.IsEmpty() {
 		w.WriteHeader(http.StatusNotFound)
 		json.NewEncoder(w).Encode(map[string]interface{}{
 			"exists":  false,
@@ -37,7 +40,7 @@ func CheckUsername(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Username exists
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"exists":  true,
 		"message": "username already taken",

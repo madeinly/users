@@ -6,45 +6,49 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/madeinly/users/internal/models"
+	"github.com/madeinly/users/internal/repository"
+	"github.com/madeinly/users/internal/user"
 )
 
 func DeleteUser(w http.ResponseWriter, r *http.Request) {
 
-	user := models.NewUser()
+	uv := user.NewUserValidator()
 
 	err := r.ParseForm()
 
 	if err != nil {
-		user.AddError("_form", err.Error())
-		user.RespondErrors(w)
+		uv.AddError("BadRequest", err.Error(), user.PropUserForm)
+		uv.RespondErrors(w)
 		return
 	}
 
-	user.AddID(models.ParseUserPOST(r, models.PropUserID))
+	userID := r.FormValue(user.PropUserID)
 
-	if user.HasErrors() {
-		user.RespondErrors(w)
+	uv.ValidID(userID)
+
+	if uv.HasErrors() {
+		uv.RespondErrors(w)
 		return
 	}
 
-	repo := models.NewRepo()
+	repo := repository.NewUserRepo()
 
-	userExist := repo.CheckExist(user.ID)
+	userExist := repo.CheckExist(userID)
 
 	if !userExist {
-		http.Error(w, fmt.Sprintf("the user with id %s does not exist", user.ID), http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf("the user with id %s does not exist", userID), http.StatusBadRequest)
 		return
 	}
 
-	err = repo.Delete(user.ID)
+	err = repo.Delete(userID)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	fmt.Fprintf(w, "User %s  deleted successfully", user.ID)
+	fmt.Fprintf(w, "User %s  deleted successfully", userID)
 
 }
 
@@ -66,17 +70,17 @@ func BulkDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := models.NewUser()
+	uv := user.NewUserValidator()
 
 	for _, userID := range request.UserIDs {
-		user.AddID(userID)
+		uv.ValidID(userID)
 
-		if user.HasErrors() {
-			user.RespondErrors(w)
+		if uv.HasErrors() {
+			uv.RespondErrors(w)
 			return
 		}
 
-		repo := models.NewRepo()
+		repo := repository.NewUserRepo()
 
 		userExist := repo.CheckExist(userID)
 

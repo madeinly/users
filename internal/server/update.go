@@ -5,75 +5,68 @@ import (
 	"net/http"
 
 	"github.com/madeinly/users/internal/auth"
-	"github.com/madeinly/users/internal/models"
+	"github.com/madeinly/users/internal/repository"
+	"github.com/madeinly/users/internal/user"
 )
 
 func UpdateUser(w http.ResponseWriter, r *http.Request) {
 
-	user := models.NewUser()
+	uv := user.NewUserValidator()
 	err := r.ParseForm()
 
 	if err != nil {
-		user.AddError("form", err.Error())
-		user.RespondErrors(w)
+		uv.AddError("BadRequest", err.Error(), user.PropUserForm)
+		uv.RespondErrors(w)
 		return
 	}
 
-	if _, exists := r.PostForm[string(models.PropUserID)]; exists {
-		user.AddID(models.ParseUserPOST(r, models.PropUserID))
-	}
+	userID := r.FormValue(user.PropUserID)
+	user.IdValidation(userID)
 
-	repo := models.NewRepo()
+	repo := repository.NewUserRepo()
 
-	u := repo.GetByID(user.ID)
+	u := repo.GetByID(userID)
 
-	if u.ID == "" {
+	if u.IsEmpty() {
 		http.Error(w, "User not found", http.StatusNotFound)
 		return
 	}
 
-	if _, exists := r.PostForm[string(models.PropUserEmail)]; exists {
-		user.AddEmail(models.ParseUserPOST(r, models.PropUserEmail))
-	} else {
-		user.Email = u.Email
-	}
+	userEmail := r.FormValue(user.PropUserEmail)
+	uv.ValidEmail(userEmail)
 
-	if _, exists := r.PostForm[string(models.PropUserStatus)]; exists {
-		user.AddStatus(models.ParseUserPOST(r, models.PropUserStatus))
-	} else {
-		user.Status = u.Status
-	}
+	userStatus := r.FormValue(user.PropUserStatus)
+	uv.ValidStatus(userStatus)
 
-	if _, exists := r.PostForm[string(models.PropUserRoleID)]; exists {
-		user.AddRoleID(models.ParseUserPOST(r, models.PropUserRoleID))
-	} else {
-		user.RoleID = models.RoleID(u.RoleID)
-	}
+	userRoleID := r.FormValue(user.PropUserRoleID)
+	uv.ValidRoleID(userRoleID)
 
-	if _, exists := r.PostForm[string(models.PropUserUsername)]; exists {
-		user.AddUsername(models.ParseUserPOST(r, models.PropUserUsername))
-	} else {
-		user.Username = u.Username
-	}
+	userUsername := r.FormValue(user.PropUserUsername)
+	uv.ValidUsername(userUsername)
 
-	if _, exists := r.PostForm[string(models.PropUserPassword)]; exists {
-		user.AddPassword(models.ParseUserPOST(r, models.PropUserPassword))
-		user.Password, err = auth.HashPassword(user.Password)
+	userPassword := r.FormValue(user.PropUserPassword)
+	uv.ValidPassword(userPassword)
 
-		if err != nil {
-			user.AddError(models.PropUserPassword, "Could not store your password")
-		}
-
-	} else {
-		user.Password = u.Password
-	}
-
-	if user.HasErrors() {
-		user.RespondErrors(w)
+	if uv.HasErrors() {
+		uv.RespondErrors(w)
 		return
 	}
 
-	if err := repo.Update(user.ID, user.Password, user.Email, user.Status, int64(user.RoleID), user.Username); err != nil {
+	hashedPassword, err := auth.HashPassword(userPassword)
+	if err != nil {
+		http.Error(w, "Failed to hash password", http.StatusInternalServerError)
+		return
+	}
+
+	if err := repo.Update(repository.UserArgs{
+		ID:       userID,
+		Username: userUsername,
+		Email:    userEmail,
+		Status:   userStatus,
+		Password: hashedPassword,
+		RoleID:   userRoleID,
+	}); err != nil {
+
 		fmt.Println(err.Error())
 		http.Error(w, "Failed to update user", http.StatusServiceUnavailable)
 		return

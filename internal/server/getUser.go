@@ -4,45 +4,47 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/madeinly/users/internal/models"
+	"github.com/madeinly/users/internal/repository"
+	"github.com/madeinly/users/internal/user"
 )
 
 func GetUser(w http.ResponseWriter, r *http.Request) {
 
-	user := models.NewUser()
+	uv := user.NewUserValidator()
 
 	err := r.ParseForm()
 
 	if err != nil {
-		user.AddError("form", "could not parse the form")
-		user.RespondErrors(w)
+		uv.AddError("BadRequest", "could not parse the form", user.PropUserForm)
+		uv.RespondErrors(w)
 		return
 	}
 
-	user.AddID(models.ParseUserGET(r, models.PropUserID))
+	userID := r.URL.Query().Get(user.PropUserID)
+	uv.ValidID(userID)
 
-	if user.HasErrors() {
-		user.RespondErrors(w)
+	if uv.HasErrors() {
+		uv.RespondErrors(w)
 		return
 	}
 
-	repo := models.NewRepo()
+	repo := repository.NewUserRepo()
 
-	u := repo.GetByID(user.ID)
+	u := repo.GetByID(userID)
 
-	if u.ID == "" {
-		http.Error(w, "No existe usuario con el id: "+user.ID, http.StatusNotFound)
+	if u.IsEmpty() {
+		http.Error(w, "No existe usuario con el id: "+userID, http.StatusNotFound)
 		return
 	}
 
-	resUser := models.NewUser()
-
-	resUser.ID = u.ID
-	resUser.Username = u.Username
-	resUser.Email = u.Email
-	resUser.RoleID = u.RoleID
-	resUser.Status = u.Status
-	resUser.RoleName = u.RoleID.GetRoleName()
+	resUser := user.User{
+		ID:       u.ID,
+		Username: u.Username,
+		Email:    u.Email,
+		Status:   u.Status,
+		RoleID:   u.RoleID,
+		RoleName: u.RoleID.GetRoleName(),
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 

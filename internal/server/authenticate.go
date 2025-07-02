@@ -1,87 +1,50 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
 
-	"github.com/madeinly/users/internal/auth"
-	"github.com/madeinly/users/internal/models"
+	"github.com/madeinly/users/internal/repository"
+	"github.com/madeinly/users/internal/user"
 )
 
 func Authenticate(w http.ResponseWriter, r *http.Request) {
 
-	user := models.NewUser()
+	uv := user.NewUserValidator()
 
 	if err := r.ParseForm(); err != nil {
-		user.AddError(models.PropUserForm, "Could not parse the form, possible malformation (?)")
-		user.RespondErrors(w)
+		uv.AddError("BadRequest", "Could not parse the form, possible malformation (?)", user.PropUserForm)
+		uv.RespondErrors(w)
 		return
 	}
 
-	user.AddEmail(models.ParseUserPOST(r, models.PropUserEmail))
-	user.AddPassword(models.ParseUserPOST(r, models.PropUserPassword))
+	email := r.FormValue(user.PropUserEmail)
+	password := r.FormValue(user.PropUserPassword)
 
-	if user.HasErrors() {
-		user.RespondErrors(w)
+	uv.ValidEmail(email)
+	uv.ValidPassword(password)
+
+	if uv.HasErrors() {
+		uv.RespondErrors(w)
 		return
 	}
 
-	isValid, _ := auth.ValidateCredentials(user.Email, user.Password) // _ is userID
+	repo := repository.NewUserRepo()
+
+	isValid, _ := repo.ValidateCredentials(email, password) // _ is userID
 
 	if !isValid {
 		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 		return
 	}
 
+	// sessionToken := uuid.New().String()
+
 	/*
 		1. Crear sesion con token opaco
 		2. generar un jwt que contenga la informacion
 		3. enviar el token
 	*/
+
+	fmt.Fprint(w, isValid)
 }
-
-// func ValidateCookie(w http.ResponseWriter, r *http.Request) {
-// 	cookie, err := r.Cookie("capre_token")
-// 	if err != nil {
-// 		if err == http.ErrNoCookie {
-// 			http.Error(w, "Authorization token missing", http.StatusUnauthorized)
-// 			return
-// 		}
-// 		http.Error(w, "Bad request", http.StatusBadRequest)
-// 		return
-// 	}
-
-// 	claims, err := auth.ValidateToken(cookie.Value)
-// 	if err != nil {
-// 		if err == jwt.ErrSignatureInvalid {
-// 			http.Error(w, "Invalid token signature", http.StatusUnauthorized)
-// 			return
-// 		}
-// 		http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
-// 		return
-// 	}
-
-// 	repoUser, err := repo.GetUserByID(claims.UserID)
-// 	if err != nil {
-// 		http.Error(w, "internal error", http.StatusInternalServerError)
-// 	}
-
-// 	if repoUser.ID == "" {
-// 		http.Error(w, "User not found", http.StatusNotFound)
-// 		return
-// 	}
-
-// 	user := models.User{
-// 		ID:       repoUser.ID,
-// 		Username: repoUser.Username,
-// 		Email:    repoUser.Email,
-// 		Status:   repoUser.UserStatus,
-// 		RoleID:   models.RoleID(repoUser.RoleID),
-// 		RoleName: models.RoleID(repoUser.RoleID).GetRoleName(),
-// 	}
-
-// 	w.WriteHeader(http.StatusOK)
-
-// 	// 4. Return the user as JSON
-// 	w.Header().Set("Content-Type", "application/json")
-// 	json.NewEncoder(w).Encode(user)
-// }

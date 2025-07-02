@@ -5,42 +5,56 @@ import (
 	"math"
 	"net/http"
 
-	"github.com/madeinly/users/internal/models"
+	"github.com/madeinly/users/internal/repository"
+	"github.com/madeinly/users/internal/user"
 )
 
 func GetUsers(w http.ResponseWriter, r *http.Request) {
 
-	user := models.NewUser()
-	pagination := models.NewPagination()
+	uv := user.NewUserValidator()
 
-	if _, exists := r.URL.Query()["limit"]; exists {
-		pagination.AddLimit(r.URL.Query().Get("user_limit"))
+	var userListArgs repository.UserListArgs
+
+	if _, exists := r.URL.Query()[user.PropUserLimit]; exists {
+		limit := r.URL.Query().Get(user.PropUserLimit)
+		parsedLimit, _ := uv.ValidLimit(limit)
+		userListArgs.Limit = parsedLimit
 	}
 
-	if _, exists := r.URL.Query()["page"]; exists {
-		pagination.AddPage(r.URL.Query().Get("user_page"))
+	if _, exists := r.URL.Query()[user.PropUserPage]; exists {
+		userPage := r.URL.Query().Get(user.PropUserPage)
+		parsedPage, _ := uv.ValidPage(userPage)
+		userListArgs.Page = parsedPage
 	}
 
-	if _, exists := r.URL.Query()[string(models.PropUserStatus)]; exists {
-		user.AddStatus(models.ParseUserGET(r, models.PropUserStatus))
+	if _, exists := r.URL.Query()[string(user.PropUserStatus)]; exists {
+		status := r.URL.Query().Get(user.PropUserStatus)
+		uv.ValidStatus(status)
 	}
 
-	if _, exists := r.URL.Query()[string(models.PropUserRoleID)]; exists {
-		user.AddRoleID(models.ParseUserGET(r, models.PropUserRoleID))
+	if _, exists := r.URL.Query()[string(user.PropUserRoleID)]; exists {
+		roleID := r.URL.Query().Get(user.PropUserRoleID)
+		uv.ValidRoleID(roleID)
 	}
 
-	if _, exists := r.URL.Query()[string(models.PropUserUsername)]; exists {
-		user.AddUsername(models.ParseUserGET(r, models.PropUserUsername))
+	if _, exists := r.URL.Query()[string(user.PropUserUsername)]; exists {
+		username := r.URL.Query().Get(user.PropUserUsername)
+		uv.ValidUsername(username)
 	}
 
-	if user.HasErrors() {
-		user.RespondErrors(w)
+	if uv.HasErrors() {
+		uv.RespondErrors(w)
 		return
 	}
 
-	repo := models.NewRepo()
+	repo := repository.NewUserRepo()
 
-	totalUsers := repo.List(user.Username, int64(user.RoleID), user.Status, -1, 0)
+	userListArgsTotal := userListArgs
+
+	userListArgsTotal.Offset = 0
+	userListArgsTotal.Limit = -1
+
+	totalUsers := repo.List(userListArgs)
 
 	countUsers := len(totalUsers)
 
@@ -49,37 +63,21 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pages := int(math.Ceil(float64(countUsers) / float64(pagination.Limit)))
+	pages := int(math.Ceil(float64(countUsers) / float64(userListArgs.Limit)))
 
-	if pagination.Limit == -1 {
+	if userListArgs.Limit == -1 {
 		pages = 1
 	}
 
-	offset := pagination.Limit * (pagination.Page - 1)
+	userListArgs.Offset = userListArgs.Limit * (int64(userListArgs.Page) - 1)
 
-	repoUsers := repo.List(user.Username, int64(user.RoleID), user.Status, pagination.Limit, int64(offset))
+	repoUsers := repo.List(userListArgs)
 
-	var usersTable models.Users
-
-	for _, u := range repoUsers {
-
-		user := models.NewUser()
-
-		user.ID = u.ID
-		user.Email = u.Email
-		user.Username = u.Username
-		user.Status = u.Status
-		user.RoleID = u.RoleID
-		user.RoleName = u.RoleID.GetRoleName()
-
-		usersTable = append(usersTable, user)
-
-	}
-
-	usersPaginated := models.Paginated{
-		Pages: pages,
-		Items: countUsers,
-		Data:  usersTable,
+	usersPaginated := user.UserPage{
+		Page:  int64(pages),
+		Limit: userListArgs.Limit,
+		Total: int64(countUsers),
+		Users: repoUsers,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
