@@ -1,4 +1,4 @@
-package server
+package http
 
 // Define a private custom type for context keys
 // type contextKey int

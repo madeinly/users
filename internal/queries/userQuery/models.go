@@ -6,7 +6,6 @@ package userQuery
 
 import (
 	"database/sql"
-	"time"
 )
 
 type LoginAttempt struct {
@@ -17,28 +16,25 @@ type LoginAttempt struct {
 }
 
 type User struct {
-	ID                string         `json:"id"`
-	Username          string         `json:"username"`
-	Email             string         `json:"email"`
-	Password          string         `json:"password"`
-	PasswordUpdatedAt sql.NullString `json:"password_updated_at"`
-	CreatedAt         string         `json:"created_at"`
-	UpdatedAt         string         `json:"updated_at"`
-}
-
-type UserRole struct {
-	UserID string `json:"user_id"`
-	RoleID int64  `json:"role_id"`
+	ID                string `json:"id"`
+	Role              string `json:"role"`
+	Username          string `json:"username"`
+	Email             string `json:"email"`
+	Password          string `json:"password"`
+	Status            string `json:"status"`
+	PasswordUpdatedAt string `json:"password_updated_at"`
+	CreatedAt         string `json:"created_at"`
+	UpdatedAt         string `json:"updated_at"`
 }
 
 type UserSession struct {
-	ID             string    `json:"id"`
-	UserID         string    `json:"user_id"`
-	Token          string    `json:"token"`
-	SessionData    string    `json:"session_data"`
-	CreatedAt      time.Time `json:"created_at"`
-	ExpiresAt      time.Time `json:"expires_at"`
-	LastAccessedAt time.Time `json:"last_accessed_at"`
+	ID             string `json:"id"`
+	UserID         string `json:"user_id"`
+	Token          string `json:"token"`
+	SessionData    string `json:"session_data"`
+	CreatedAt      string `json:"created_at"`
+	ExpiresAt      string `json:"expires_at"`
+	LastAccessedAt string `json:"last_accessed_at"`
 }
 
 type UsersMetum struct {

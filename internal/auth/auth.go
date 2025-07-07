@@ -4,7 +4,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func HashPassword(p string) (string, error) {
+func HashPassword(p string) string {
 
 	passwordByte, err := bcrypt.GenerateFromPassword(
 		[]byte(p),
@@ -12,11 +12,11 @@ func HashPassword(p string) (string, error) {
 	)
 
 	if err != nil {
-		return "", err
+		return ""
 	}
 
 	p = string(passwordByte)
 
-	return p, nil
+	return p
 
 }

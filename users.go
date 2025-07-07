@@ -1,15 +1,16 @@
 package users
 
 import (
+	"context"
 	_ "embed"
-	"net/http"
 
+	"github.com/google/uuid"
 	coreModels "github.com/madeinly/core/models"
 
+	"github.com/madeinly/users/internal/auth"
 	"github.com/madeinly/users/internal/cmd"
+	"github.com/madeinly/users/internal/http"
 	"github.com/madeinly/users/internal/repository"
-	"github.com/madeinly/users/internal/server"
-	"github.com/madeinly/users/internal/user"
 )
 
 var UserMigration = coreModels.Migration{
@@ -20,76 +21,25 @@ var Feature = coreModels.FeaturePackage{
 	Name:      "users",
 	Migration: UserMigration,
 	Setup:     setupUsers,
-	Routes:    Routes,
+	Routes:    http.Routes,
 	Cmd:       cmd.Execute,
 }
 
 //go:embed internal/queries/initial_schema.sql
 var initialSchema string
 
-var Routes = []coreModels.Route{
-	{
-		Type:    "POST",
-		Pattern: "/user",
-		Handler: http.HandlerFunc(server.CreateUser),
-		// Handler: server.AuthMiddleware(http.HandlerFunc(server.CreateUser)),
-	},
-	{
-		Type:    "GET",
-		Pattern: "/user",
-		Handler: http.HandlerFunc(server.GetUser),
-		// Handler: server.AuthMiddleware(http.HandlerFunc(server.GetUser)),
-	},
-	{
-		Type:    "GET",
-		Pattern: "/users",
-		// Handler: server.AuthMiddleware(http.HandlerFunc(server.GetUsers)),
-		Handler: http.HandlerFunc(server.GetUsers),
-	},
-	{
-		Type:    "PATCH",
-		Pattern: "/user",
-		Handler: http.HandlerFunc(server.UpdateUser),
-		// Handler: server.AuthMiddleware(http.HandlerFunc(server.UpdateUser)),
-	},
-	{
-		Type:    "POST",
-		Pattern: "/user/auth",
-		Handler: http.HandlerFunc(server.Authenticate),
-	},
-	{
-		Type:    "DELETE",
-		Pattern: "/user",
-		Handler: http.HandlerFunc(server.DeleteUser),
-		// Handler: server.AuthMiddleware(http.HandlerFunc(server.DeleteUser)),
-	},
-	// {
-	// 	Type:    "POST",
-	// 	Pattern: "/user/validate",
-	// 	Handler: http.HandlerFunc(server.ValidateCookie),
-	// },
-	{
-		Type:    "DELETE",
-		Pattern: "/users",
-		Handler: http.HandlerFunc(server.BulkDelete),
-		// Handler: server.AuthMiddleware(http.HandlerFunc(server.BulkDelete)),
-	},
-	{
-		Type:    "GET",
-		Pattern: "/users/check-username",
-		Handler: http.HandlerFunc(server.CheckUsername),
-	},
-}
-
 func setupUsers() error {
 
 	repo := repository.NewUserRepo()
 
-	_, err := repo.Create(repository.UserArgs{
+	ctx := context.Background()
+
+	_, err := repo.Create(ctx, repository.CreateUserParams{
+		UserID:   uuid.NewString(),
 		Username: "admin",
-		Email:    "admin@example.com",
-		Password: "qwer1234",
-		RoleID:   string(user.RoleAdmin),
+		Email:    "example@email.com",
+		Password: auth.HashPassword("qwer1234"),
+		Role:     "role_admin",
 		Status:   "active",
 	})
 

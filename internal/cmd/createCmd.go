@@ -61,29 +61,6 @@ var createCmd = &cobra.Command{
 	Use:   "create",
 	Short: "Creates a new user",
 	Run: func(cmd *cobra.Command, args []string) {
-		// fmt.Printf("user: %s\n", username)
 
-		// v := parser.NewUserParser()
-
-		// username := v.ValidateUsername(username)
-		// email := v.ValidateEmail(email)
-		// password := v.ValidatePassword(password)
-		// roleID := v.ValidateRoleID(roleID)
-		// status := v.ValidateStatus(status)
-
-		// if v.HasErrors() {
-		// 	userErrors, _ := json.MarshalIndent(v.Errors, "", " ")
-		// 	fmt.Println(string(userErrors))
-		// 	return
-		// }
-
-		// userID, err := repo.CreateUser(username, email, password, roleID, status)
-
-		// if err != nil {
-		// 	fmt.Println(fmt.Sprint(v.Errors))
-
-		// }
-
-		// fmt.Printf("the user with id %s was created", userID)
 	},
 }

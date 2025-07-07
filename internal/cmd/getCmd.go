@@ -28,22 +28,6 @@ var getCmd = &cobra.Command{
 	Use:   "get",
 	Short: "get a single user by its id",
 	Run: func(cmd *cobra.Command, args []string) {
-		// v := parser.NewUserParser()
 
-		// userID := v.ValidateID(userID)
-
-		// if v.HasErrors() {
-		// 	userErrors, _ := json.MarshalIndent(v.Errors, "", " ")
-		// 	fmt.Println(string(userErrors))
-		// 	return
-		// }
-
-		// user, err := repo.GetUserByID(userID)
-
-		// if err != nil {
-		// 	fmt.Println(err.Error())
-		// }
-
-		// fmt.Println(user)
 	},
 }

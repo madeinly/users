@@ -27,9 +27,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.addUserMetaStmt, err = db.PrepareContext(ctx, addUserMeta); err != nil {
 		return nil, fmt.Errorf("error preparing query AddUserMeta: %w", err)
 	}
-	if q.addUserRoleStmt, err = db.PrepareContext(ctx, addUserRole); err != nil {
-		return nil, fmt.Errorf("error preparing query AddUserRole: %w", err)
-	}
 	if q.cleanupExpiredSessionsStmt, err = db.PrepareContext(ctx, cleanupExpiredSessions); err != nil {
 		return nil, fmt.Errorf("error preparing query CleanupExpiredSessions: %w", err)
 	}
@@ -42,6 +39,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.createUserStmt, err = db.PrepareContext(ctx, createUser); err != nil {
 		return nil, fmt.Errorf("error preparing query CreateUser: %w", err)
 	}
+	if q.deleteMetasStmt, err = db.PrepareContext(ctx, deleteMetas); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteMetas: %w", err)
+	}
 	if q.deleteSessionStmt, err = db.PrepareContext(ctx, deleteSession); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteSession: %w", err)
 	}
@@ -50,6 +50,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.getSessionByTokenStmt, err = db.PrepareContext(ctx, getSessionByToken); err != nil {
 		return nil, fmt.Errorf("error preparing query GetSessionByToken: %w", err)
+	}
+	if q.getSessionByUserIDStmt, err = db.PrepareContext(ctx, getSessionByUserID); err != nil {
+		return nil, fmt.Errorf("error preparing query GetSessionByUserID: %w", err)
 	}
 	if q.getUserStmt, err = db.PrepareContext(ctx, getUser); err != nil {
 		return nil, fmt.Errorf("error preparing query GetUser: %w", err)
@@ -84,9 +87,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.updateUserPasswordStmt, err = db.PrepareContext(ctx, updateUserPassword); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateUserPassword: %w", err)
 	}
-	if q.updateUserRoleStmt, err = db.PrepareContext(ctx, updateUserRole); err != nil {
-		return nil, fmt.Errorf("error preparing query UpdateUserRole: %w", err)
-	}
 	if q.updateUserStatusStmt, err = db.PrepareContext(ctx, updateUserStatus); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateUserStatus: %w", err)
 	}
@@ -101,11 +101,6 @@ func (q *Queries) Close() error {
 	if q.addUserMetaStmt != nil {
 		if cerr := q.addUserMetaStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing addUserMetaStmt: %w", cerr)
-		}
-	}
-	if q.addUserRoleStmt != nil {
-		if cerr := q.addUserRoleStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing addUserRoleStmt: %w", cerr)
 		}
 	}
 	if q.cleanupExpiredSessionsStmt != nil {
@@ -128,6 +123,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing createUserStmt: %w", cerr)
 		}
 	}
+	if q.deleteMetasStmt != nil {
+		if cerr := q.deleteMetasStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteMetasStmt: %w", cerr)
+		}
+	}
 	if q.deleteSessionStmt != nil {
 		if cerr := q.deleteSessionStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteSessionStmt: %w", cerr)
@@ -141,6 +141,11 @@ func (q *Queries) Close() error {
 	if q.getSessionByTokenStmt != nil {
 		if cerr := q.getSessionByTokenStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getSessionByTokenStmt: %w", cerr)
+		}
+	}
+	if q.getSessionByUserIDStmt != nil {
+		if cerr := q.getSessionByUserIDStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getSessionByUserIDStmt: %w", cerr)
 		}
 	}
 	if q.getUserStmt != nil {
@@ -198,11 +203,6 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing updateUserPasswordStmt: %w", cerr)
 		}
 	}
-	if q.updateUserRoleStmt != nil {
-		if cerr := q.updateUserRoleStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing updateUserRoleStmt: %w", cerr)
-		}
-	}
 	if q.updateUserStatusStmt != nil {
 		if cerr := q.updateUserStatusStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateUserStatusStmt: %w", cerr)
@@ -253,14 +253,15 @@ type Queries struct {
 	db                         DBTX
 	tx                         *sql.Tx
 	addUserMetaStmt            *sql.Stmt
-	addUserRoleStmt            *sql.Stmt
 	cleanupExpiredSessionsStmt *sql.Stmt
 	countUsersStmt             *sql.Stmt
 	createSessionStmt          *sql.Stmt
 	createUserStmt             *sql.Stmt
+	deleteMetasStmt            *sql.Stmt
 	deleteSessionStmt          *sql.Stmt
 	deleteUserStmt             *sql.Stmt
 	getSessionByTokenStmt      *sql.Stmt
+	getSessionByUserIDStmt     *sql.Stmt
 	getUserStmt                *sql.Stmt
 	getUserByEmailStmt         *sql.Stmt
 	getUserByIDStmt            *sql.Stmt
@@ -272,7 +273,6 @@ type Queries struct {
 	updateUserLastLoginStmt    *sql.Stmt
 	updateUserMetaStmt         *sql.Stmt
 	updateUserPasswordStmt     *sql.Stmt
-	updateUserRoleStmt         *sql.Stmt
 	updateUserStatusStmt       *sql.Stmt
 	userExistsStmt             *sql.Stmt
 }
@@ -282,14 +282,15 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		db:                         tx,
 		tx:                         tx,
 		addUserMetaStmt:            q.addUserMetaStmt,
-		addUserRoleStmt:            q.addUserRoleStmt,
 		cleanupExpiredSessionsStmt: q.cleanupExpiredSessionsStmt,
 		countUsersStmt:             q.countUsersStmt,
 		createSessionStmt:          q.createSessionStmt,
 		createUserStmt:             q.createUserStmt,
+		deleteMetasStmt:            q.deleteMetasStmt,
 		deleteSessionStmt:          q.deleteSessionStmt,
 		deleteUserStmt:             q.deleteUserStmt,
 		getSessionByTokenStmt:      q.getSessionByTokenStmt,
+		getSessionByUserIDStmt:     q.getSessionByUserIDStmt,
 		getUserStmt:                q.getUserStmt,
 		getUserByEmailStmt:         q.getUserByEmailStmt,
 		getUserByIDStmt:            q.getUserByIDStmt,
@@ -301,7 +302,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		updateUserLastLoginStmt:    q.updateUserLastLoginStmt,
 		updateUserMetaStmt:         q.updateUserMetaStmt,
 		updateUserPasswordStmt:     q.updateUserPasswordStmt,
-		updateUserRoleStmt:         q.updateUserRoleStmt,
 		updateUserStatusStmt:       q.updateUserStatusStmt,
 		userExistsStmt:             q.userExistsStmt,
 	}

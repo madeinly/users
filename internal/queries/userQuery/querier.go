@@ -10,26 +10,26 @@ import (
 
 type Querier interface {
 	AddUserMeta(ctx context.Context, arg AddUserMetaParams) (UsersMetum, error)
-	AddUserRole(ctx context.Context, arg AddUserRoleParams) error
 	CleanupExpiredSessions(ctx context.Context) error
 	CountUsers(ctx context.Context) (int64, error)
 	CreateSession(ctx context.Context, arg CreateSessionParams) error
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
+	DeleteMetas(ctx context.Context, userID string) error
 	DeleteSession(ctx context.Context, id string) error
 	DeleteUser(ctx context.Context, id string) error
 	GetSessionByToken(ctx context.Context, token string) (UserSession, error)
+	GetSessionByUserID(ctx context.Context, userID string) (UserSession, error)
 	GetUser(ctx context.Context, id string) (GetUserRow, error)
 	GetUserByEmail(ctx context.Context, email string) (User, error)
 	GetUserByID(ctx context.Context, id string) (User, error)
 	GetUserByUsername(ctx context.Context, username string) (User, error)
-	GetUsers(ctx context.Context, arg GetUsersParams) ([]GetUsersRow, error)
+	GetUsers(ctx context.Context, arg GetUsersParams) ([]User, error)
 	UpdateSessionData(ctx context.Context, arg UpdateSessionDataParams) error
-	UpdateSessionToken(ctx context.Context, arg UpdateSessionTokenParams) error
+	UpdateSessionToken(ctx context.Context, arg UpdateSessionTokenParams) (UserSession, error)
 	UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error)
 	UpdateUserLastLogin(ctx context.Context, id string) error
 	UpdateUserMeta(ctx context.Context, arg UpdateUserMetaParams) (UsersMetum, error)
 	UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) error
-	UpdateUserRole(ctx context.Context, arg UpdateUserRoleParams) (UserRole, error)
 	UpdateUserStatus(ctx context.Context, arg UpdateUserStatusParams) (UsersMetum, error)
 	UserExists(ctx context.Context, id string) (bool, error)
 }

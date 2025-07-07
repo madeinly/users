@@ -22,3 +22,7 @@ UPDATE users_meta
 SET meta_value = ?
 WHERE user_id = ? AND meta_key = "user_status"
 RETURNING *;
+
+-- name: DeleteMetas :exec
+DELETE FROM users_meta
+WHERE user_id = ?;

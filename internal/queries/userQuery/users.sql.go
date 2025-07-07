@@ -7,7 +7,6 @@ package userQuery
 
 import (
 	"context"
-	"database/sql"
 )
 
 const countUsers = `-- name: CountUsers :one
@@ -26,13 +25,17 @@ INSERT INTO users (
     id,
     username,
     email,
-    password
+    password,
+    role,
+    status
 ) VALUES (
     ?,
     ?,
     ?,
+    ?,
+    ?,
     ?
-) RETURNING id, username, email, password, password_updated_at, created_at, updated_at
+) RETURNING id, role, username, email, password, status, password_updated_at, created_at, updated_at
 `
 
 type CreateUserParams struct {
@@ -40,6 +43,8 @@ type CreateUserParams struct {
 	Username string `json:"username"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
+	Role     string `json:"role"`
+	Status   string `json:"status"`
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
@@ -48,13 +53,17 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		arg.Username,
 		arg.Email,
 		arg.Password,
+		arg.Role,
+		arg.Status,
 	)
 	var i User
 	err := row.Scan(
 		&i.ID,
+		&i.Role,
 		&i.Username,
 		&i.Email,
 		&i.Password,
+		&i.Status,
 		&i.PasswordUpdatedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -74,16 +83,10 @@ func (q *Queries) DeleteUser(ctx context.Context, id string) error {
 
 const getUser = `-- name: GetUser :one
 SELECT
-    u.id,
-    u.email,
-    u.username,
-    u.password,
-    ur.role_id,
+    u.id, u.role, u.username, u.email, u.password, u.status, u.password_updated_at, u.created_at, u.updated_at,
     um.meta_value AS user_status
 FROM
     users u
-INNER JOIN
-    user_roles ur ON u.id = ur.user_id
 INNER JOIN
     users_meta um ON u.id = um.user_id AND um.meta_key = 'user_status'
 WHERE
@@ -91,12 +94,16 @@ WHERE
 `
 
 type GetUserRow struct {
-	ID         string `json:"id"`
-	Email      string `json:"email"`
-	Username   string `json:"username"`
-	Password   string `json:"password"`
-	RoleID     int64  `json:"role_id"`
-	UserStatus string `json:"user_status"`
+	ID                string `json:"id"`
+	Role              string `json:"role"`
+	Username          string `json:"username"`
+	Email             string `json:"email"`
+	Password          string `json:"password"`
+	Status            string `json:"status"`
+	PasswordUpdatedAt string `json:"password_updated_at"`
+	CreatedAt         string `json:"created_at"`
+	UpdatedAt         string `json:"updated_at"`
+	UserStatus        string `json:"user_status"`
 }
 
 func (q *Queries) GetUser(ctx context.Context, id string) (GetUserRow, error) {
@@ -104,17 +111,21 @@ func (q *Queries) GetUser(ctx context.Context, id string) (GetUserRow, error) {
 	var i GetUserRow
 	err := row.Scan(
 		&i.ID,
-		&i.Email,
+		&i.Role,
 		&i.Username,
+		&i.Email,
 		&i.Password,
-		&i.RoleID,
+		&i.Status,
+		&i.PasswordUpdatedAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 		&i.UserStatus,
 	)
 	return i, err
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, username, email, password, password_updated_at, created_at, updated_at FROM users 
+SELECT id, role, username, email, password, status, password_updated_at, created_at, updated_at FROM users 
 WHERE email = ? LIMIT 1
 `
 
@@ -123,9 +134,11 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 	var i User
 	err := row.Scan(
 		&i.ID,
+		&i.Role,
 		&i.Username,
 		&i.Email,
 		&i.Password,
+		&i.Status,
 		&i.PasswordUpdatedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -134,7 +147,7 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 }
 
 const getUserByID = `-- name: GetUserByID :one
-SELECT id, username, email, password, password_updated_at, created_at, updated_at FROM users 
+SELECT id, role, username, email, password, status, password_updated_at, created_at, updated_at FROM users 
 WHERE id = ? LIMIT 1
 `
 
@@ -143,9 +156,11 @@ func (q *Queries) GetUserByID(ctx context.Context, id string) (User, error) {
 	var i User
 	err := row.Scan(
 		&i.ID,
+		&i.Role,
 		&i.Username,
 		&i.Email,
 		&i.Password,
+		&i.Status,
 		&i.PasswordUpdatedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -154,7 +169,7 @@ func (q *Queries) GetUserByID(ctx context.Context, id string) (User, error) {
 }
 
 const getUserByUsername = `-- name: GetUserByUsername :one
-SELECT id, username, email, password, password_updated_at, created_at, updated_at FROM users 
+SELECT id, role, username, email, password, status, password_updated_at, created_at, updated_at FROM users 
 WHERE username = ? LIMIT 1
 `
 
@@ -163,9 +178,11 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User,
 	var i User
 	err := row.Scan(
 		&i.ID,
+		&i.Role,
 		&i.Username,
 		&i.Email,
 		&i.Password,
+		&i.Status,
 		&i.PasswordUpdatedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -175,47 +192,29 @@ func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User,
 
 const getUsers = `-- name: GetUsers :many
 SELECT
-    u.id,
-    u.username,
-    u.email,
-    u.password,
-    ur.role_id,
-    um.meta_value AS status_name,
-    u.created_at
+    u.id, u.role, u.username, u.email, u.password, u.status, u.password_updated_at, u.created_at, u.updated_at
 FROM
     users u
-INNER JOIN user_roles ur ON u.id = ur.user_id
-LEFT JOIN users_meta um ON u.id = um.user_id AND um.meta_key = 'user_status'
 WHERE
-    (?1 = '' OR u.username LIKE '%' || ?1 || '%') AND
-    (?2 = 0 OR ur.role_id = ?2) AND 
-    (?3 = '' OR COALESCE(um.meta_value, 'active') = ?3)
+    (?1 = '' OR u.username LIKE '%' || ?1 || '%' ) AND
+    (?2 = '' OR ?2 = 'active') AND
+    (?3 = '' OR ?3 = 'role_user')
 LIMIT ?5 OFFSET ?4
 `
 
 type GetUsersParams struct {
 	Username interface{} `json:"username"`
-	RoleID   interface{} `json:"role_id"`
 	Status   interface{} `json:"status"`
+	Role     interface{} `json:"role"`
 	Offset   int64       `json:"offset"`
 	Limit    int64       `json:"limit"`
 }
 
-type GetUsersRow struct {
-	ID         string         `json:"id"`
-	Username   string         `json:"username"`
-	Email      string         `json:"email"`
-	Password   string         `json:"password"`
-	RoleID     int64          `json:"role_id"`
-	StatusName sql.NullString `json:"status_name"`
-	CreatedAt  string         `json:"created_at"`
-}
-
-func (q *Queries) GetUsers(ctx context.Context, arg GetUsersParams) ([]GetUsersRow, error) {
+func (q *Queries) GetUsers(ctx context.Context, arg GetUsersParams) ([]User, error) {
 	rows, err := q.query(ctx, q.getUsersStmt, getUsers,
 		arg.Username,
-		arg.RoleID,
 		arg.Status,
+		arg.Role,
 		arg.Offset,
 		arg.Limit,
 	)
@@ -223,17 +222,19 @@ func (q *Queries) GetUsers(ctx context.Context, arg GetUsersParams) ([]GetUsersR
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetUsersRow
+	var items []User
 	for rows.Next() {
-		var i GetUsersRow
+		var i User
 		if err := rows.Scan(
 			&i.ID,
+			&i.Role,
 			&i.Username,
 			&i.Email,
 			&i.Password,
-			&i.RoleID,
-			&i.StatusName,
+			&i.Status,
+			&i.PasswordUpdatedAt,
 			&i.CreatedAt,
+			&i.UpdatedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -254,15 +255,17 @@ SET
     username = ?,
     email = ?,
     password = ?,
+    role = ?,
     updated_at = CURRENT_TIMESTAMP
 WHERE id = ?
-RETURNING id, username, email, password, password_updated_at, created_at, updated_at
+RETURNING id, role, username, email, password, status, password_updated_at, created_at, updated_at
 `
 
 type UpdateUserParams struct {
 	Username string `json:"username"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
+	Role     string `json:"role"`
 	ID       string `json:"id"`
 }
 
@@ -271,14 +274,17 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 		arg.Username,
 		arg.Email,
 		arg.Password,
+		arg.Role,
 		arg.ID,
 	)
 	var i User
 	err := row.Scan(
 		&i.ID,
+		&i.Role,
 		&i.Username,
 		&i.Email,
 		&i.Password,
+		&i.Status,
 		&i.PasswordUpdatedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,

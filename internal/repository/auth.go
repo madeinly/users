@@ -30,6 +30,5 @@ func (repo *sqliteRepo) ValidateCredentials(email string, password string) (bool
 	if err != nil {
 		return false, ""
 	}
-
 	return true, user.ID
 }

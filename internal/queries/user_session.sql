@@ -9,12 +9,19 @@ INSERT INTO user_sessions (
     ?1, ?2, ?3, ?4, ?5
 );
 
--- name: UpdateSessionToken :exec
+-- name: GetSessionByUserID :one
+SELECT * FROM user_sessions
+WHERE user_id = ?1 Limit 1;
+
+
+-- name: UpdateSessionToken :one
 UPDATE user_sessions
 SET 
     token = ?1,
     expires_at = ?2
-WHERE id = ?3;
+WHERE user_id = ?3
+RETURNING *;
+
 
 -- name: UpdateSessionData :exec
 UPDATE user_sessions

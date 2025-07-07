@@ -7,7 +7,6 @@ package userQuery
 
 import (
 	"context"
-	"time"
 )
 
 const cleanupExpiredSessions = `-- name: CleanupExpiredSessions :exec
@@ -34,11 +33,11 @@ INSERT INTO user_sessions (
 `
 
 type CreateSessionParams struct {
-	ID          string    `json:"id"`
-	UserID      string    `json:"user_id"`
-	Token       string    `json:"token"`
-	SessionData string    `json:"session_data"`
-	ExpiresAt   time.Time `json:"expires_at"`
+	ID          string `json:"id"`
+	UserID      string `json:"user_id"`
+	Token       string `json:"token"`
+	SessionData string `json:"session_data"`
+	ExpiresAt   string `json:"expires_at"`
 }
 
 func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) error {
@@ -82,6 +81,26 @@ func (q *Queries) GetSessionByToken(ctx context.Context, token string) (UserSess
 	return i, err
 }
 
+const getSessionByUserID = `-- name: GetSessionByUserID :one
+SELECT id, user_id, token, session_data, created_at, expires_at, last_accessed_at FROM user_sessions
+WHERE user_id = ?1 Limit 1
+`
+
+func (q *Queries) GetSessionByUserID(ctx context.Context, userID string) (UserSession, error) {
+	row := q.queryRow(ctx, q.getSessionByUserIDStmt, getSessionByUserID, userID)
+	var i UserSession
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Token,
+		&i.SessionData,
+		&i.CreatedAt,
+		&i.ExpiresAt,
+		&i.LastAccessedAt,
+	)
+	return i, err
+}
+
 const updateSessionData = `-- name: UpdateSessionData :exec
 UPDATE user_sessions
 SET 
@@ -99,21 +118,32 @@ func (q *Queries) UpdateSessionData(ctx context.Context, arg UpdateSessionDataPa
 	return err
 }
 
-const updateSessionToken = `-- name: UpdateSessionToken :exec
+const updateSessionToken = `-- name: UpdateSessionToken :one
 UPDATE user_sessions
 SET 
     token = ?1,
     expires_at = ?2
-WHERE id = ?3
+WHERE user_id = ?3
+RETURNING id, user_id, token, session_data, created_at, expires_at, last_accessed_at
 `
 
 type UpdateSessionTokenParams struct {
-	Token     string    `json:"token"`
-	ExpiresAt time.Time `json:"expires_at"`
-	ID        string    `json:"id"`
+	Token     string `json:"token"`
+	ExpiresAt string `json:"expires_at"`
+	UserID    string `json:"user_id"`
 }
 
-func (q *Queries) UpdateSessionToken(ctx context.Context, arg UpdateSessionTokenParams) error {
-	_, err := q.exec(ctx, q.updateSessionTokenStmt, updateSessionToken, arg.Token, arg.ExpiresAt, arg.ID)
-	return err
+func (q *Queries) UpdateSessionToken(ctx context.Context, arg UpdateSessionTokenParams) (UserSession, error) {
+	row := q.queryRow(ctx, q.updateSessionTokenStmt, updateSessionToken, arg.Token, arg.ExpiresAt, arg.UserID)
+	var i UserSession
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Token,
+		&i.SessionData,
+		&i.CreatedAt,
+		&i.ExpiresAt,
+		&i.LastAccessedAt,
+	)
+	return i, err
 }

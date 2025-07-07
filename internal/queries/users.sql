@@ -3,8 +3,12 @@ INSERT INTO users (
     id,
     username,
     email,
-    password
+    password,
+    role,
+    status
 ) VALUES (
+    ?,
+    ?,
     ?,
     ?,
     ?,
@@ -33,16 +37,10 @@ WHERE username = ? LIMIT 1;
 
 -- name: GetUser :one
 SELECT
-    u.id,
-    u.email,
-    u.username,
-    u.password,
-    ur.role_id,
+    u.*,
     um.meta_value AS user_status
 FROM
     users u
-INNER JOIN
-    user_roles ur ON u.id = ur.user_id
 INNER JOIN
     users_meta um ON u.id = um.user_id AND um.meta_key = 'user_status'
 WHERE
@@ -54,6 +52,7 @@ SET
     username = ?,
     email = ?,
     password = ?,
+    role = ?,
     updated_at = CURRENT_TIMESTAMP
 WHERE id = ?
 RETURNING *;
@@ -76,26 +75,18 @@ WHERE id = ?;
 DELETE FROM users
 WHERE id = ?;
 
+
+
 -- name: CountUsers :one
 SELECT COUNT(*) FROM users;
 
-
-
 -- name: GetUsers :many
 SELECT
-    u.id,
-    u.username,
-    u.email,
-    u.password,
-    ur.role_id,
-    um.meta_value AS status_name,
-    u.created_at
+    u.*
 FROM
     users u
-INNER JOIN user_roles ur ON u.id = ur.user_id
-LEFT JOIN users_meta um ON u.id = um.user_id AND um.meta_key = 'user_status'
 WHERE
-    (:username = '' OR u.username LIKE '%' || :username || '%') AND
-    (:role_id = 0 OR ur.role_id = :role_id) AND 
-    (:status = '' OR COALESCE(um.meta_value, 'active') = :status)
+    (:username = '' OR u.username LIKE '%' || :username || '%' ) AND
+    (:status = '' OR :status = 'active') AND
+    (:role = '' OR :role = 'role_user')
 LIMIT :limit OFFSET :offset;

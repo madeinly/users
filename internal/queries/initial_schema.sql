@@ -1,12 +1,14 @@
 -- Create users table
 CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY, -- store UUID
+    role  TEXT NOT NULL,
     username TEXT UNIQUE NOT NULL,
     email TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL, -- bcrypt hash
-    password_updated_at TEXT DEFAULT CURRENT_TIMESTAMP, -- Initial set on insert
+    status TEXT NOT NULL,
+    password_updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, -- Initial set on insert
     created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%d %H:%M:%S', 'now')), -- ISO8601
-    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP  -- Remove ON UPDATE part
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP -- Remove ON UPDATE part
 );
 
 -- Create the password-specific trigger
@@ -27,12 +29,6 @@ BEGIN
     WHERE id = NEW.id;
 END;
 
--- Create user_roles junction table
-CREATE TABLE IF NOT EXISTS user_roles (
-    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    role_id INTEGER NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
-    PRIMARY KEY (user_id, role_id)
-);
 
 -- Create login_attempts table
 CREATE TABLE IF NOT EXISTS login_attempts (
@@ -59,9 +55,9 @@ CREATE TABLE IF NOT EXISTS user_sessions (
     user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     token TEXT NOT NULL UNIQUE,
     session_data TEXT NOT NULL,  -- JSON data
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    expires_at TIMESTAMP NOT NULL,
-    last_accessed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expires_at TEXT NOT NULL,
+    last_accessed_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Trigger to update last_accessed_at on any session access

@@ -35,6 +35,16 @@ func (q *Queries) AddUserMeta(ctx context.Context, arg AddUserMetaParams) (Users
 	return i, err
 }
 
+const deleteMetas = `-- name: DeleteMetas :exec
+DELETE FROM users_meta
+WHERE user_id = ?
+`
+
+func (q *Queries) DeleteMetas(ctx context.Context, userID string) error {
+	_, err := q.exec(ctx, q.deleteMetasStmt, deleteMetas, userID)
+	return err
+}
+
 const updateUserMeta = `-- name: UpdateUserMeta :one
 UPDATE users_meta
 SET meta_value = ?
