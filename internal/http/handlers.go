@@ -72,6 +72,12 @@ func (h *Handler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 
 }
 
+/*
+note that user_limit and user_page are string type, this is cause int would case ambiguity for its
+null type, rather use string, and check in the validator that is parseable
+
+[todo] remove the pointer and references its ok to have "" as values if param is note sent
+*/
 func (h *Handler) GetUsers(w http.ResponseWriter, r *http.Request) {
 
 	queryParams := r.URL.Query()
@@ -137,6 +143,7 @@ func (h *Handler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	err := h.UserService.UpdateUser(r.Context(), req.UserID, req.RoleID, req.Status, req.Email, req.Password, req.Username)
 
 	if err != nil {
+
 		respondError(w, err)
 		return
 	}

@@ -197,8 +197,8 @@ FROM
     users u
 WHERE
     (?1 = '' OR u.username LIKE '%' || ?1 || '%' ) AND
-    (?2 = '' OR ?2 = 'active') AND
-    (?3 = '' OR ?3 = 'role_user')
+    (?2 = '' OR u.status = ?2) AND
+    (?3 = '' OR u.role = ?3)
 LIMIT ?5 OFFSET ?4
 `
 

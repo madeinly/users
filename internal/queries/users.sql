@@ -86,7 +86,7 @@ SELECT
 FROM
     users u
 WHERE
-    (:username = '' OR u.username LIKE '%' || :username || '%' ) AND
-    (:status = '' OR :status = 'active') AND
-    (:role = '' OR :role = 'role_user')
-LIMIT :limit OFFSET :offset;
+    (@username = '' OR u.username LIKE '%' || @username || '%' ) AND
+    (@status = '' OR u.status = @status) AND
+    (@role = '' OR u.role = @role)
+LIMIT @limit OFFSET @offset;

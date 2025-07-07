@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 	"slices"
+	"strconv"
 	"strings"
 	"unicode/utf8"
 )
@@ -124,6 +125,44 @@ func (ues *UserErrors) Role(role string) {
 			Code:    fieldInvalidCode,
 			Message: strings.Join(message, ", "),
 			Field:   "user_status",
+		})
+	}
+
+}
+
+func (ues *UserErrors) Page(page string) {
+	var message []string
+
+	_, err := strconv.ParseInt(page, 10, 64)
+
+	if err != nil {
+		message = append(message, "it looks that it cant be parse, are you sure is a number?")
+	}
+
+	if message != nil {
+		*ues = append(*ues, &UserError{
+			Code:    fieldInvalidCode,
+			Message: strings.Join(message, ", "),
+			Field:   "user_page",
+		})
+	}
+
+}
+
+func (ues *UserErrors) Limit(limit string) {
+	var message []string
+
+	_, err := strconv.ParseInt(limit, 10, 64)
+
+	if err != nil {
+		message = append(message, "it looks that it cant be parse, are you sure is a number?")
+	}
+
+	if message != nil {
+		*ues = append(*ues, &UserError{
+			Code:    fieldInvalidCode,
+			Message: strings.Join(message, ", "),
+			Field:   "user_limit",
 		})
 	}
 

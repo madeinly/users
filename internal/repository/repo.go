@@ -154,15 +154,8 @@ func (repo *sqliteRepo) GetByID(ctx context.Context, userID string) (RepoUser, e
 
 	s, err := query.GetSessionByUserID(ctx, userID)
 
-	var lastAccessedAt string
-
-	if err != nil {
-		if !errors.Is(err, sql.ErrNoRows) {
-			return RepoUser{}, err
-		}
-		lastAccessedAt = u.CreatedAt
-	} else {
-		lastAccessedAt = s.LastAccessedAt
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return RepoUser{}, err
 	}
 
 	return RepoUser{
@@ -176,7 +169,7 @@ func (repo *sqliteRepo) GetByID(ctx context.Context, userID string) (RepoUser, e
 		CreatedAt:         u.CreatedAt,
 		UpdatedAt:         u.UpdatedAt,
 		UserStatus:        u.Status,
-		LastLogin:         lastAccessedAt,
+		LastLogin:         s.LastAccessedAt,
 	}, nil
 
 }
@@ -184,8 +177,6 @@ func (repo *sqliteRepo) GetByID(ctx context.Context, userID string) (RepoUser, e
 func (repo *sqliteRepo) List(ctx context.Context, params UserListParams) ([]userQuery.User, error) {
 
 	query := userQuery.New(repo.db)
-
-	fmt.Println(params)
 
 	us, err := query.GetUsers(ctx, userQuery.GetUsersParams{
 		Username: params.Username,
@@ -196,7 +187,6 @@ func (repo *sqliteRepo) List(ctx context.Context, params UserListParams) ([]user
 	})
 
 	if err != nil {
-		fmt.Println("the error was", err.Error())
 		return us, err
 	}
 

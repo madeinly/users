@@ -106,14 +106,18 @@ func (s *UserService) UnregisterUser(ctx context.Context, userID string) []*user
 
 }
 
+// [TODO] study the relationship between page offset and limit and see if there is a better handling for the
+// values that the current implementation
 func (s *UserService) ListUsers(ctx context.Context, params ListUsersParams) (user.UsersPage, []*user.UserError) {
 
 	uc := user.NewUserChecker()
 
-	var limit int64
-	var page int64
+	var repoParams = repository.UserListParams{
+		Limit: 10,
+		Page:  1,
+	}
 
-	var repoParams repository.UserListParams
+	fmt.Println(params.Limit, params.Page)
 
 	if params.Username != nil {
 		repoParams.Username = *params.Username
@@ -130,12 +134,12 @@ func (s *UserService) ListUsers(ctx context.Context, params ListUsersParams) (us
 	}
 
 	if params.Limit != nil {
-		limit, _ = strconv.ParseInt(*params.Limit, 10, 64)
+		limit, _ := strconv.ParseInt(*params.Limit, 10, 64)
 		repoParams.Limit = limit
 	}
 
-	if params.Limit != nil {
-		page, _ = strconv.ParseInt(*params.Page, 10, 64)
+	if params.Page != nil {
+		page, _ := strconv.ParseInt(*params.Page, 10, 64)
 		repoParams.Page = int(page)
 	}
 
@@ -145,10 +149,10 @@ func (s *UserService) ListUsers(ctx context.Context, params ListUsersParams) (us
 
 	repo := repository.NewUserRepo()
 
-	if page == 1 {
+	if repoParams.Page == 1 {
 		repoParams.Offset = 0
 	} else {
-		repoParams.Offset = page * limit
+		repoParams.Offset = int64(repoParams.Page) * repoParams.Limit
 	}
 
 	us, err := repo.List(ctx, repoParams)
@@ -175,8 +179,8 @@ func (s *UserService) ListUsers(ctx context.Context, params ListUsersParams) (us
 	}
 
 	return user.UsersPage{
-		Limit: limit,
-		Page:  page,
+		Limit: repoParams.Limit,
+		Page:  int64(repoParams.Page),
 		Total: len(users),
 		Users: users,
 	}, nil
