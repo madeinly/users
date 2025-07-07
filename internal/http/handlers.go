@@ -124,26 +124,25 @@ func (h *Handler) GetUsers(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 
-	var req struct {
-		UserID   string `json:"user_id"`       //|
-		Username string `json:"user_username"` //| this jsonTags are hardcoded
-		RoleID   string `json:"user_roleID"`   //|	Create a developer
-		Status   string `json:"user_status"`   //| Thus:
-		Email    string `json:"user_page"`     //|	dependency, careful!
-		Password string `json:"user_limit"`    //| GoodLuck :)
-	}
-
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	if err := r.ParseForm(); err != nil {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
 
-	defer r.Body.Close()
+	var serviceParams = service.UpdateUserParams{
+		UserID:   r.FormValue("user_id"),
+		Username: r.FormValue("user_username"),
+		Role:     r.FormValue("user_role"),
+		Status:   r.FormValue("user_status"),
+		Email:    r.FormValue("user_email"),
+		Password: r.FormValue("user_password"),
+	}
 
-	err := h.UserService.UpdateUser(r.Context(), req.UserID, req.RoleID, req.Status, req.Email, req.Password, req.Username)
+	fmt.Println("ServiceParams", serviceParams)
+
+	err := h.UserService.UpdateUser(r.Context(), serviceParams)
 
 	if err != nil {
-
 		respondError(w, err)
 		return
 	}

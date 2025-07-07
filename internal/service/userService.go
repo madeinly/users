@@ -187,7 +187,56 @@ func (s *UserService) ListUsers(ctx context.Context, params ListUsersParams) (us
 
 }
 
-func (s *UserService) UpdateUser(ctx context.Context, userId string, roleID string, status string, email string, password string, username string) []*user.UserError {
+func (s *UserService) UpdateUser(ctx context.Context, params UpdateUserParams) []*user.UserError {
 
-	return []*user.UserError{}
+	uc := user.NewUserChecker()
+
+	repo := repository.NewUserRepo()
+
+	if params.Username != "" {
+		uc.Username(params.Username)
+	}
+
+	//this is the one that is always validated
+	uc.UserID(params.UserID)
+
+	if params.Role != "" {
+		uc.Username(params.Role)
+	}
+
+	if params.Status != "" {
+		uc.Username(params.Status)
+	}
+
+	if params.Email != "" {
+		uc.Username(params.Email)
+	}
+
+	if params.Password != "" {
+		uc.Username(params.Password)
+	}
+
+	if uc.HasErrors() {
+		return *uc
+	}
+
+	repoParams := repository.UpdateUserParams{
+		ID:       params.UserID,
+		Username: params.Username,
+		Email:    params.Email,
+		Status:   params.Status,
+		Password: params.Password,
+		Role:     params.Role,
+	}
+
+	fmt.Println("repoParams", repoParams)
+
+	err := repo.Update(ctx, repoParams)
+
+	if err != nil {
+		uc.AddError("db_error", "bad attempt on db user deletion", "db")
+		return *uc
+	}
+
+	return nil
 }

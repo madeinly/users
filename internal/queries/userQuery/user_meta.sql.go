@@ -63,22 +63,3 @@ func (q *Queries) UpdateUserMeta(ctx context.Context, arg UpdateUserMetaParams) 
 	err := row.Scan(&i.UserID, &i.MetaKey, &i.MetaValue)
 	return i, err
 }
-
-const updateUserStatus = `-- name: UpdateUserStatus :one
-UPDATE users_meta
-SET meta_value = ?
-WHERE user_id = ? AND meta_key = "user_status"
-RETURNING user_id, meta_key, meta_value
-`
-
-type UpdateUserStatusParams struct {
-	MetaValue string `json:"meta_value"`
-	UserID    string `json:"user_id"`
-}
-
-func (q *Queries) UpdateUserStatus(ctx context.Context, arg UpdateUserStatusParams) (UsersMetum, error) {
-	row := q.queryRow(ctx, q.updateUserStatusStmt, updateUserStatus, arg.MetaValue, arg.UserID)
-	var i UsersMetum
-	err := row.Scan(&i.UserID, &i.MetaKey, &i.MetaValue)
-	return i, err
-}

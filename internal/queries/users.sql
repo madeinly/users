@@ -58,12 +58,6 @@ WHERE id = ?
 RETURNING *;
 
 
--- name: UpdateUserPassword :exec
-UPDATE users
-SET
-    password = ?,
-    password_updated_at = CURRENT_TIMESTAMP
-WHERE id = ?;
 
 -- name: UpdateUserLastLogin :exec
 UPDATE users
@@ -90,3 +84,37 @@ WHERE
     (@status = '' OR u.status = @status) AND
     (@role = '' OR u.role = @role)
 LIMIT @limit OFFSET @offset;
+
+
+
+-- name: UpdateUserUsername :exec
+UPDATE users
+SET
+username = @username
+WHERE id = @id;
+
+
+-- name: UpdateUserEmail :exec
+UPDATE users
+SET
+email = @email
+WHERE id = @id;
+
+-- name: UpdateUserStatus :exec
+UPDATE users
+SET
+status = @status
+WHERE id = @id;
+
+-- name: UpdateUserPassword :exec
+UPDATE users
+SET
+    password = @password
+WHERE id = @id;
+
+
+-- name: UpdateUserRole :exec
+UPDATE users
+SET
+role = @Role
+WHERE id = @id;

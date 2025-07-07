@@ -27,10 +27,13 @@ type Querier interface {
 	UpdateSessionData(ctx context.Context, arg UpdateSessionDataParams) error
 	UpdateSessionToken(ctx context.Context, arg UpdateSessionTokenParams) (UserSession, error)
 	UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error)
+	UpdateUserEmail(ctx context.Context, arg UpdateUserEmailParams) error
 	UpdateUserLastLogin(ctx context.Context, id string) error
 	UpdateUserMeta(ctx context.Context, arg UpdateUserMetaParams) (UsersMetum, error)
 	UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) error
-	UpdateUserStatus(ctx context.Context, arg UpdateUserStatusParams) (UsersMetum, error)
+	UpdateUserRole(ctx context.Context, arg UpdateUserRoleParams) error
+	UpdateUserStatus(ctx context.Context, arg UpdateUserStatusParams) error
+	UpdateUserUsername(ctx context.Context, arg UpdateUserUsernameParams) error
 	UserExists(ctx context.Context, id string) (bool, error)
 }
 

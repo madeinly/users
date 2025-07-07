@@ -292,6 +292,23 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 	return i, err
 }
 
+const updateUserEmail = `-- name: UpdateUserEmail :exec
+UPDATE users
+SET
+email = ?1
+WHERE id = ?2
+`
+
+type UpdateUserEmailParams struct {
+	Email string `json:"email"`
+	ID    string `json:"id"`
+}
+
+func (q *Queries) UpdateUserEmail(ctx context.Context, arg UpdateUserEmailParams) error {
+	_, err := q.exec(ctx, q.updateUserEmailStmt, updateUserEmail, arg.Email, arg.ID)
+	return err
+}
+
 const updateUserLastLogin = `-- name: UpdateUserLastLogin :exec
 UPDATE users
 SET
@@ -307,9 +324,8 @@ func (q *Queries) UpdateUserLastLogin(ctx context.Context, id string) error {
 const updateUserPassword = `-- name: UpdateUserPassword :exec
 UPDATE users
 SET
-    password = ?,
-    password_updated_at = CURRENT_TIMESTAMP
-WHERE id = ?
+    password = ?1
+WHERE id = ?2
 `
 
 type UpdateUserPasswordParams struct {
@@ -319,6 +335,57 @@ type UpdateUserPasswordParams struct {
 
 func (q *Queries) UpdateUserPassword(ctx context.Context, arg UpdateUserPasswordParams) error {
 	_, err := q.exec(ctx, q.updateUserPasswordStmt, updateUserPassword, arg.Password, arg.ID)
+	return err
+}
+
+const updateUserRole = `-- name: UpdateUserRole :exec
+UPDATE users
+SET
+role = ?1
+WHERE id = ?2
+`
+
+type UpdateUserRoleParams struct {
+	Role string `json:"Role"`
+	ID   string `json:"id"`
+}
+
+func (q *Queries) UpdateUserRole(ctx context.Context, arg UpdateUserRoleParams) error {
+	_, err := q.exec(ctx, q.updateUserRoleStmt, updateUserRole, arg.Role, arg.ID)
+	return err
+}
+
+const updateUserStatus = `-- name: UpdateUserStatus :exec
+UPDATE users
+SET
+status = ?1
+WHERE id = ?2
+`
+
+type UpdateUserStatusParams struct {
+	Status string `json:"status"`
+	ID     string `json:"id"`
+}
+
+func (q *Queries) UpdateUserStatus(ctx context.Context, arg UpdateUserStatusParams) error {
+	_, err := q.exec(ctx, q.updateUserStatusStmt, updateUserStatus, arg.Status, arg.ID)
+	return err
+}
+
+const updateUserUsername = `-- name: UpdateUserUsername :exec
+UPDATE users
+SET
+username = ?1
+WHERE id = ?2
+`
+
+type UpdateUserUsernameParams struct {
+	Username string `json:"username"`
+	ID       string `json:"id"`
+}
+
+func (q *Queries) UpdateUserUsername(ctx context.Context, arg UpdateUserUsernameParams) error {
+	_, err := q.exec(ctx, q.updateUserUsernameStmt, updateUserUsername, arg.Username, arg.ID)
 	return err
 }
 

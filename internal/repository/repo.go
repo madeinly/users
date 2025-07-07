@@ -81,65 +81,64 @@ func (repo *sqliteRepo) Delete(ctx context.Context, userID string) error {
 
 }
 
-// func (repo *sqliteRepo) Update(args UserArgs) error {
+func (repo *sqliteRepo) Update(ctx context.Context, args UpdateUserParams) error {
 
-// 	dbConn := repo.db
+	dbConn := repo.db
 
-// 	// Begin transaction
-// 	tx, err := dbConn.Begin()
-// 	if err != nil {
-// 		return fmt.Errorf("failed to begin transaction: %w", err)
-// 	}
+	tx, err := dbConn.Begin()
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
 
-// 	// Defer rollback in case of failure
-// 	defer func() {
-// 		if err != nil {
-// 			tx.Rollback()
-// 		}
-// 	}()
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		}
+	}()
 
-// 	// Create query with transaction context
-// 	query := userQuery.New(tx)
-// 	ctx := context.Background()
+	query := userQuery.New(tx)
 
-// 	// Prepare update parameters
-// 	updateUserParams := userQuery.UpdateUserParams{
-// 		ID:       args.ID,
-// 		Username: args.Username,
-// 		Email:    args.Email,
-// 		Password: args.Password,
-// 	}
+	if args.Username != "" {
+		query.UpdateUserUsername(ctx, userQuery.UpdateUserUsernameParams{
+			Username: args.Username,
+			ID:       args.ID,
+		})
+	}
 
-// 	// Update user status (within transaction)
-// 	if _, err := query.UpdateUserStatus(ctx, userQuery.UpdateUserStatusParams{
-// 		MetaValue: args.Status,
-// 		UserID:    args.ID,
-// 	}); err != nil {
-// 		return fmt.Errorf("failed to update user status: %w", err)
-// 	}
+	if args.Email != "" {
+		query.UpdateUserEmail(ctx, userQuery.UpdateUserEmailParams{
+			Email: args.Email,
+			ID:    args.ID,
+		})
+	}
 
-// 	roleID, _ := strconv.ParseInt(args.RoleID, 10, 64)
+	if args.Status != "" {
+		query.UpdateUserStatus(ctx, userQuery.UpdateUserStatusParams{
+			Status: args.Status,
+			ID:     args.ID,
+		})
+	}
 
-// 	// Update user role (within transaction)
-// 	if _, err := query.UpdateUserRole(ctx, userQuery.UpdateUserRoleParams{
-// 		UserID: args.ID,
-// 		RoleID: roleID,
-// 	}); err != nil {
-// 		return fmt.Errorf("failed to update user role: %w", err)
-// 	}
+	if args.Password != "" {
+		query.UpdateUserPassword(ctx, userQuery.UpdateUserPasswordParams{
+			Password: args.Status,
+			ID:       args.ID,
+		})
+	}
 
-// 	// Update user (within transaction)
-// 	if _, err := query.UpdateUser(ctx, updateUserParams); err != nil {
-// 		return fmt.Errorf("failed to update user: %w", err)
-// 	}
+	if args.Role != "" {
+		query.UpdateUserRole(ctx, userQuery.UpdateUserRoleParams{
+			Role: args.Status,
+			ID:   args.ID,
+		})
+	}
 
-// 	// Commit transaction if everything succeeded
-// 	if err := tx.Commit(); err != nil {
-// 		return fmt.Errorf("failed to commit transaction: %w", err)
-// 	}
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
 
-// 	return nil
-// }
+	return nil
+}
 
 func (repo *sqliteRepo) GetByID(ctx context.Context, userID string) (RepoUser, error) {
 

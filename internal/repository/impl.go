@@ -23,15 +23,6 @@ type Session interface {
 	CheckExist()
 }
 
-type UserArgs struct {
-	ID       string
-	Username string
-	Email    string
-	Status   string
-	Password string
-	RoleID   string
-}
-
 type sqliteRepo struct {
 	db *sql.DB
 }

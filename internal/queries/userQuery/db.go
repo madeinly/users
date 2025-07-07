@@ -78,6 +78,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.updateUserStmt, err = db.PrepareContext(ctx, updateUser); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateUser: %w", err)
 	}
+	if q.updateUserEmailStmt, err = db.PrepareContext(ctx, updateUserEmail); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateUserEmail: %w", err)
+	}
 	if q.updateUserLastLoginStmt, err = db.PrepareContext(ctx, updateUserLastLogin); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateUserLastLogin: %w", err)
 	}
@@ -87,8 +90,14 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.updateUserPasswordStmt, err = db.PrepareContext(ctx, updateUserPassword); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateUserPassword: %w", err)
 	}
+	if q.updateUserRoleStmt, err = db.PrepareContext(ctx, updateUserRole); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateUserRole: %w", err)
+	}
 	if q.updateUserStatusStmt, err = db.PrepareContext(ctx, updateUserStatus); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateUserStatus: %w", err)
+	}
+	if q.updateUserUsernameStmt, err = db.PrepareContext(ctx, updateUserUsername); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateUserUsername: %w", err)
 	}
 	if q.userExistsStmt, err = db.PrepareContext(ctx, userExists); err != nil {
 		return nil, fmt.Errorf("error preparing query UserExists: %w", err)
@@ -188,6 +197,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing updateUserStmt: %w", cerr)
 		}
 	}
+	if q.updateUserEmailStmt != nil {
+		if cerr := q.updateUserEmailStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateUserEmailStmt: %w", cerr)
+		}
+	}
 	if q.updateUserLastLoginStmt != nil {
 		if cerr := q.updateUserLastLoginStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateUserLastLoginStmt: %w", cerr)
@@ -203,9 +217,19 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing updateUserPasswordStmt: %w", cerr)
 		}
 	}
+	if q.updateUserRoleStmt != nil {
+		if cerr := q.updateUserRoleStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateUserRoleStmt: %w", cerr)
+		}
+	}
 	if q.updateUserStatusStmt != nil {
 		if cerr := q.updateUserStatusStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing updateUserStatusStmt: %w", cerr)
+		}
+	}
+	if q.updateUserUsernameStmt != nil {
+		if cerr := q.updateUserUsernameStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateUserUsernameStmt: %w", cerr)
 		}
 	}
 	if q.userExistsStmt != nil {
@@ -270,10 +294,13 @@ type Queries struct {
 	updateSessionDataStmt      *sql.Stmt
 	updateSessionTokenStmt     *sql.Stmt
 	updateUserStmt             *sql.Stmt
+	updateUserEmailStmt        *sql.Stmt
 	updateUserLastLoginStmt    *sql.Stmt
 	updateUserMetaStmt         *sql.Stmt
 	updateUserPasswordStmt     *sql.Stmt
+	updateUserRoleStmt         *sql.Stmt
 	updateUserStatusStmt       *sql.Stmt
+	updateUserUsernameStmt     *sql.Stmt
 	userExistsStmt             *sql.Stmt
 }
 
@@ -299,10 +326,13 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		updateSessionDataStmt:      q.updateSessionDataStmt,
 		updateSessionTokenStmt:     q.updateSessionTokenStmt,
 		updateUserStmt:             q.updateUserStmt,
+		updateUserEmailStmt:        q.updateUserEmailStmt,
 		updateUserLastLoginStmt:    q.updateUserLastLoginStmt,
 		updateUserMetaStmt:         q.updateUserMetaStmt,
 		updateUserPasswordStmt:     q.updateUserPasswordStmt,
+		updateUserRoleStmt:         q.updateUserRoleStmt,
 		updateUserStatusStmt:       q.updateUserStatusStmt,
+		updateUserUsernameStmt:     q.updateUserUsernameStmt,
 		userExistsStmt:             q.userExistsStmt,
 	}
 }

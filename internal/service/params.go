@@ -15,3 +15,12 @@ type ListUsersParams struct {
 	Page     *string
 	Limit    *string
 }
+
+type UpdateUserParams struct {
+	UserID   string
+	Username string
+	Role     string
+	Status   string
+	Email    string
+	Password string
+}

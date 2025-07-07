@@ -17,3 +17,12 @@ type UserListParams struct {
 	Page     int
 	Limit    int64
 }
+
+type UpdateUserParams struct {
+	ID       string
+	Username string
+	Email    string
+	Status   string
+	Password string
+	Role     string
+}
