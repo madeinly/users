@@ -2,8 +2,6 @@ package service
 
 import (
 	"context"
-	"database/sql"
-	"errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -27,8 +25,8 @@ func (s *UserService) ValidateCredentials(ctx context.Context, userEmail string,
 
 	user, err := repo.ValidateCredentials(userEmail, userPassword)
 
-	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		uc.AddError("db_error", "bad attempt on db user deletion", "db")
+	if err != nil {
+		uc.AddError("db_error", "bad attempt on user validation", "db")
 		return "", "", *uc
 	}
 
