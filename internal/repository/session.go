@@ -1,90 +1,58 @@
 package repository
 
-// func (repo *sqliteRepo) GetSessionByUserID(userID string) user.UserSession {
+import (
+	"context"
+	"fmt"
 
-// 	ctx := context.Background()
+	"github.com/madeinly/users/internal/queries/userQuery"
+)
 
-// 	q := userQuery.New(repo.db)
+func (repo *sqliteRepo) GetSessionByUserID(userID string) userQuery.UserSession {
 
-// 	session, err := q.GetSessionByUserID(ctx, userID)
+	ctx := context.Background()
 
-// 	if err != nil {
-// 		fmt.Println(err.Error())
+	q := userQuery.New(repo.db)
 
-// 		return user.UserSession{}
-// 	}
+	session, err := q.GetSessionByUserID(ctx, userID)
 
-// 	return user.UserSession{
-// 		ID:             session.ID,
-// 		UserID:         session.UserID,
-// 		Token:          session.Token,
-// 		SessionData:    session.SessionData,
-// 		CreatedAt:      session.CreatedAt,
-// 		ExpiresAt:      session.ExpiresAt,
-// 		LastAccessedAt: session.LastAccessedAt,
-// 	}
+	if err != nil {
+		fmt.Println(err.Error())
 
-// }
+		return userQuery.UserSession{}
+	}
 
-// func (repo *sqliteRepo) CreateUserSession(userID string) user.UserSession {
-// 	ctx := context.Background()
+	return session
 
-// 	q := userQuery.New(repo.db)
+}
 
-// 	sessionID := uuid.New().String()
+func (repo *sqliteRepo) CreateUserSession(ctx context.Context, params userQuery.CreateSessionParams) error {
 
-// 	token := uuid.New().String()
+	q := userQuery.New(repo.db)
 
-// 	createdAt := time.Now()
-// 	expiresAt := createdAt.Add(2 * time.Hour)
+	err := q.CreateSession(ctx, params)
 
-// 	err := q.CreateSession(ctx, userQuery.CreateSessionParams{
-// 		ID:          sessionID,
-// 		UserID:      userID,
-// 		Token:       token,
-// 		SessionData: "[]",
-// 		ExpiresAt:   expiresAt,
-// 	})
+	if err != nil {
+		return err
+	}
 
-// 	if err != nil {
-// 		fmt.Println(err.Error())
-// 	}
+	return nil
+}
 
-// 	return user.UserSession{
-// 		ID:             sessionID,
-// 		UserID:         userID,
-// 		Token:          token,
-// 		SessionData:    "[]",
-// 		CreatedAt:      createdAt,
-// 		ExpiresAt:      expiresAt,
-// 		LastAccessedAt: createdAt,
-// 	}
+func (repo *sqliteRepo) UpdateUserSession(userID string, token string, expiresAt string) error {
 
-// }
+	ctx := context.Background()
 
-// func (repo *sqliteRepo) UpdateUserSession(userID string, token string, expiresAt time.Time) user.UserSession {
+	q := userQuery.New(repo.db)
 
-// 	ctx := context.Background()
+	_, err := q.UpdateSessionToken(ctx, userQuery.UpdateSessionTokenParams{
+		Token:     token,
+		ExpiresAt: expiresAt,
+	})
 
-// 	q := userQuery.New(repo.db)
+	if err != nil {
+		return err
+	}
 
-// 	session, err := q.UpdateSessionToken(ctx, userQuery.UpdateSessionTokenParams{
-// 		Token:     token,
-// 		ExpiresAt: expiresAt,
-// 	})
+	return nil
 
-// 	if err != nil {
-// 		fmt.Println(err.Error())
-// 	}
-
-// 	return user.UserSession{
-// 		ID:             session.ID,
-// 		UserID:         session.UserID,
-// 		Token:          session.Token,
-// 		SessionData:    session.SessionData,
-// 		CreatedAt:      session.CreatedAt,
-// 		ExpiresAt:      session.ExpiresAt,
-// 		LastAccessedAt: session.LastAccessedAt,
-// 	}
-
-// }
+}

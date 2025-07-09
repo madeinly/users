@@ -121,14 +121,14 @@ func (repo *sqliteRepo) Update(ctx context.Context, args UpdateUserParams) error
 
 	if args.Password != "" {
 		query.UpdateUserPassword(ctx, userQuery.UpdateUserPasswordParams{
-			Password: args.Status,
+			Password: args.Password,
 			ID:       args.ID,
 		})
 	}
 
 	if args.Role != "" {
 		query.UpdateUserRole(ctx, userQuery.UpdateUserRoleParams{
-			Role: args.Status,
+			Role: args.Role,
 			ID:   args.ID,
 		})
 	}
@@ -159,7 +159,7 @@ func (repo *sqliteRepo) GetByID(ctx context.Context, userID string) (RepoUser, e
 
 	return RepoUser{
 		ID:                u.ID,
-		Role:              u.ID,
+		Role:              u.Role,
 		Username:          u.Username,
 		Email:             u.Email,
 		Password:          u.Password,

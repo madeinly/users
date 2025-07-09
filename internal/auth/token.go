@@ -18,19 +18,19 @@ var jwtSecret = []byte("7996a6f6308f3825593597349e53a30c") // Change this!
 type Claims struct {
 	UserID       string `json:"user_id"`
 	SessionToken string `json:"session_token"`
-	RoleID       string `json:"user_roleID"`
+	Role         string `json:"user_roleID"`
 	jwt.RegisteredClaims
 }
 
 // GenerateToken creates a new JWT token with custom claims
-func GenerateToken(userID, sessionToken, roleID string, expiresAt time.Time) (string, error) {
+func GenerateToken(userID, sessionToken, role string, expiresAt time.Time) (string, error) {
 	// Set expiration time
 
 	// Create the claims
 	claims := &Claims{
 		UserID:       userID,
 		SessionToken: sessionToken,
-		RoleID:       roleID,
+		Role:         role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expiresAt),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

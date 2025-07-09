@@ -124,7 +124,7 @@ func (ues *UserErrors) Role(role string) {
 		*ues = append(*ues, &UserError{
 			Code:    fieldInvalidCode,
 			Message: strings.Join(message, ", "),
-			Field:   "user_status",
+			Field:   "user_role",
 		})
 	}
 

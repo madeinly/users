@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
+	"github.com/madeinly/users/internal/auth"
 	"github.com/madeinly/users/internal/service"
 )
 
@@ -138,8 +140,6 @@ func (h *Handler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		Password: r.FormValue("user_password"),
 	}
 
-	fmt.Println("ServiceParams", serviceParams)
-
 	err := h.UserService.UpdateUser(r.Context(), serviceParams)
 
 	if err != nil {
@@ -148,4 +148,49 @@ func (h *Handler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
+}
+
+func (h *Handler) AuthUser(w http.ResponseWriter, r *http.Request) {
+
+	if err := r.ParseForm(); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	token, expiration, err := h.UserService.ValidateCredentials(r.Context(), r.FormValue("user_email"), r.FormValue("user_password"))
+
+	if err != nil {
+		respondError(w, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"token": token, "expiresAt": expiration})
+}
+
+func (h *Handler) ValidateToken(w http.ResponseWriter, r *http.Request) {
+
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	if !strings.HasPrefix(authHeader, "Bearer ") {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+
+	_, err := auth.ParseToken(tokenString)
+
+	if err != nil {
+		w.WriteHeader(http.StatusExpectationFailed)
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+
 }

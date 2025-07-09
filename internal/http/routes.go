@@ -1,6 +1,8 @@
 package http
 
-import coreModels "github.com/madeinly/core/models"
+import (
+	coreModels "github.com/madeinly/core/models"
+)
 
 var handler = NewHandler()
 
@@ -29,22 +31,22 @@ var Routes = []coreModels.Route{
 		Handler: handler.UpdateUser,
 		// Handler: server.AuthMiddleware(http.HandlerFunc(server.UpdateUser)),
 	},
-	// {
-	// 	Type:    "POST",
-	// 	Pattern: "/user/auth",
-	// 	Handler: http.HandlerFunc(server.Authenticate),
-	// },
+	{
+		Type:    "POST",
+		Pattern: "/user/auth",
+		Handler: handler.AuthUser,
+	},
 	{
 		Type:    "DELETE",
 		Pattern: "/user",
 		Handler: handler.DeleteUser,
 		// Handler: server.AuthMiddleware(http.HandlerFunc(server.DeleteUser)),
 	},
-	// {
-	// 	Type:    "POST",
-	// 	Pattern: "/user/validate",
-	// 	Handler: http.HandlerFunc(server.ValidateToken),
-	// },
+	{
+		Type:    "POST",
+		Pattern: "/user/validate",
+		Handler: handler.ValidateToken,
+	},
 	// {
 	// 	Type:    "DELETE",
 	// 	Pattern: "/users",

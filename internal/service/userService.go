@@ -191,8 +191,6 @@ func (s *UserService) UpdateUser(ctx context.Context, params UpdateUserParams) [
 
 	uc := user.NewUserChecker()
 
-	repo := repository.NewUserRepo()
-
 	if params.Username != "" {
 		uc.Username(params.Username)
 	}
@@ -201,24 +199,26 @@ func (s *UserService) UpdateUser(ctx context.Context, params UpdateUserParams) [
 	uc.UserID(params.UserID)
 
 	if params.Role != "" {
-		uc.Username(params.Role)
+		uc.Role(params.Role)
 	}
 
 	if params.Status != "" {
-		uc.Username(params.Status)
+		uc.Status(params.Status)
 	}
 
 	if params.Email != "" {
-		uc.Username(params.Email)
+		uc.Email(params.Email)
 	}
 
 	if params.Password != "" {
-		uc.Username(params.Password)
+		uc.Password(params.Password)
 	}
 
 	if uc.HasErrors() {
 		return *uc
 	}
+
+	repo := repository.NewUserRepo()
 
 	repoParams := repository.UpdateUserParams{
 		ID:       params.UserID,
@@ -228,8 +228,6 @@ func (s *UserService) UpdateUser(ctx context.Context, params UpdateUserParams) [
 		Password: params.Password,
 		Role:     params.Role,
 	}
-
-	fmt.Println("repoParams", repoParams)
 
 	err := repo.Update(ctx, repoParams)
 
