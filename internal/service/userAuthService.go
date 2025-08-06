@@ -8,26 +8,16 @@ import (
 	"github.com/madeinly/users/internal/auth"
 	"github.com/madeinly/users/internal/queries/userQuery"
 	"github.com/madeinly/users/internal/repository"
-	"github.com/madeinly/users/internal/user"
 )
 
-func (s *UserService) ValidateCredentials(ctx context.Context, userEmail string, userPassword string) (string, string, user.UserErrors) {
-	uc := user.NewUserChecker()
-
-	uc.Email(userEmail)
-	uc.Password(userPassword)
-
-	if uc.HasErrors() {
-		return "", "", *uc
-	}
+func ValidateCredentials(ctx context.Context, userEmail string, userPassword string) (string, string, error) {
 
 	repo := repository.NewUserRepo()
 
 	user, err := repo.ValidateCredentials(userEmail, userPassword)
 
 	if err != nil {
-		uc.AddError("db_error", "bad attempt on user validation", "db")
-		return "", "", *uc
+		return "", "", err
 	}
 
 	sessionToken := uuid.New().String()
@@ -37,7 +27,7 @@ func (s *UserService) ValidateCredentials(ctx context.Context, userEmail string,
 	token, err := auth.GenerateToken(user.ID, sessionToken, user.Role, tokenExpiration)
 
 	if err != nil {
-		uc.AddError("token_error", "problem generating token", "token")
+		return "", "", err
 	}
 
 	// Update or create session
@@ -57,8 +47,7 @@ func (s *UserService) ValidateCredentials(ctx context.Context, userEmail string,
 	}
 
 	if err != nil {
-		uc.AddError("toke_error", "bad token generation", "token")
-		return "", "", *uc
+		return "", "", err
 	}
 
 	return token, tokenExpiration.Format("2006-01-02 15:04:05"), nil

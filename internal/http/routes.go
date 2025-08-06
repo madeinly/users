@@ -4,48 +4,46 @@ import (
 	coreModels "github.com/madeinly/core/models"
 )
 
-var handler = NewHandler()
-
 var Routes = []coreModels.Route{
 	{
 		Type:    "POST",
 		Pattern: "/user",
-		Handler: handler.CreateUser,
+		Handler: CreateUser,
 		// Handler: server.AuthMiddleware(http.HandlerFunc(server.CreateUser)),
 	},
 	{
 		Type:    "GET",
 		Pattern: "/user",
-		Handler: handler.GetUser,
+		Handler: GetUser,
 		// Handler: server.AuthMiddleware(http.HandlerFunc(server.GetUser)),
 	},
 	{
 		Type:    "GET",
 		Pattern: "/users",
 		// Handler: server.AuthMiddleware(http.HandlerFunc(server.GetUsers)),
-		Handler: handler.GetUsers,
+		Handler: GetUsers,
 	},
 	{
 		Type:    "PATCH",
 		Pattern: "/user",
-		Handler: handler.UpdateUser,
+		Handler: UpdateUser,
 		// Handler: server.AuthMiddleware(http.HandlerFunc(server.UpdateUser)),
 	},
 	{
 		Type:    "POST",
 		Pattern: "/user/auth",
-		Handler: handler.AuthUser,
+		Handler: AuthUser,
 	},
 	{
 		Type:    "DELETE",
 		Pattern: "/user",
-		Handler: handler.DeleteUser,
+		Handler: DeleteUser,
 		// Handler: server.AuthMiddleware(http.HandlerFunc(server.DeleteUser)),
 	},
 	{
 		Type:    "POST",
 		Pattern: "/user/validate",
-		Handler: handler.ValidateToken,
+		Handler: ValidateToken,
 	},
 	// {
 	// 	Type:    "DELETE",

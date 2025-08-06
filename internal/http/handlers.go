@@ -2,34 +2,52 @@ package http
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strings"
 
+	"github.com/madeinly/core"
 	"github.com/madeinly/users/internal/auth"
 	"github.com/madeinly/users/internal/service"
+	"github.com/madeinly/users/internal/user"
 )
 
-func (h *Handler) CreateUser(w http.ResponseWriter, r *http.Request) {
+func CreateUser(w http.ResponseWriter, r *http.Request) {
+
+	bag := core.Validate()
 
 	if err := r.ParseForm(); err != nil {
-		http.Error(w, "bad request", http.StatusBadRequest)
+		bag.Add("form", "bad_request", "looks like it is malformed could not parse")
+		bag.WriteHTTP(w)
 		return
 	}
 
-	err := h.UserService.RegisterUser(r.Context(), service.RegisteUserParams{
-		Username: r.FormValue("user_username"),
-		Email:    r.FormValue("user_email"),
-		Password: r.FormValue("user_password"),
-		Role:     r.FormValue("user_role"),
-		Status:   r.FormValue("user_status"),
+	username := r.FormValue("user_username")
+	email := r.FormValue("user_email")
+	password := r.FormValue("user_password")
+	role := r.FormValue("user_role")
+	status := r.FormValue("user_status")
+
+	bag.Validate(username, user.UserIDRules)
+	bag.Validate(email, user.EmailRules)
+	bag.Validate(password, user.PasswordRules)
+	bag.Validate(role, user.RoleRules)
+	bag.Validate(status, user.StatusRules)
+
+	if bag.HasErrors() {
+		bag.WriteHTTP(w)
+		return
+	}
+
+	err := service.RegisterUser(r.Context(), service.RegisteUserParams{
+		Username: username,
+		Email:    email,
+		Password: password,
+		Role:     role,
+		Status:   status,
 	})
 
 	if err != nil {
-
-		fmt.Println(err)
-
-		respondError(w, err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -37,14 +55,23 @@ func (h *Handler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (h *Handler) GetUser(w http.ResponseWriter, r *http.Request) {
+func GetUser(w http.ResponseWriter, r *http.Request) {
 
 	userID := r.URL.Query().Get("user_id")
 
-	user, err := h.UserService.GetUser(r.Context(), userID)
+	validator := core.Validate()
+
+	validator.Validate(userID, user.UserIDRules)
+
+	if validator.HasErrors() {
+		validator.WriteHTTP(w)
+		return
+	}
+
+	user, err := service.GetUser(r.Context(), userID)
 
 	if err != nil {
-		respondError(w, err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -59,14 +86,24 @@ func (h *Handler) GetUser(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (h *Handler) DeleteUser(w http.ResponseWriter, r *http.Request) {
+func DeleteUser(w http.ResponseWriter, r *http.Request) {
 
 	userID := r.URL.Query().Get("user_id")
 
-	err := h.UserService.UnregisterUser(r.Context(), userID)
+	validator := core.Validate()
+
+	validator.Validate(userID, user.UserIDRules)
+
+	if validator.HasErrors() {
+
+		validator.WriteHTTP(w)
+		return
+	}
+
+	err := service.UnregisterUser(r.Context(), userID)
 
 	if err != nil {
-		respondError(w, err)
+		//[!TODO] work on standard errors from user service so I know how to act if something goes wrong there
 		return
 	}
 
@@ -80,7 +117,7 @@ null type, rather use string, and check in the validator that is parseable
 
 [todo] remove the pointer and references its ok to have "" as values if param is note sent
 */
-func (h *Handler) GetUsers(w http.ResponseWriter, r *http.Request) {
+func GetUsers(w http.ResponseWriter, r *http.Request) {
 
 	queryParams := r.URL.Query()
 
@@ -111,10 +148,10 @@ func (h *Handler) GetUsers(w http.ResponseWriter, r *http.Request) {
 		listUserParams.Limit = &limit
 	}
 
-	users, err := h.UserService.ListUsers(r.Context(), listUserParams)
+	users, err := service.ListUsers(r.Context(), listUserParams)
 
 	if err != nil {
-		respondError(w, err)
+		//[!TODO] work on standard errors from user service so I know how to act if something goes wrong there
 		return
 	}
 
@@ -124,43 +161,78 @@ func (h *Handler) GetUsers(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (h *Handler) UpdateUser(w http.ResponseWriter, r *http.Request) {
+func UpdateUser(w http.ResponseWriter, r *http.Request) {
+
+	validator := core.Validate()
 
 	if err := r.ParseForm(); err != nil {
-		http.Error(w, "bad request", http.StatusBadRequest)
+		validator.Add("form", "bad_request", "could not parse the form")
+		validator.WriteHTTP(w)
 		return
 	}
 
-	var serviceParams = service.UpdateUserParams{
-		UserID:   r.FormValue("user_id"),
-		Username: r.FormValue("user_username"),
-		Role:     r.FormValue("user_role"),
-		Status:   r.FormValue("user_status"),
-		Email:    r.FormValue("user_email"),
-		Password: r.FormValue("user_password"),
+	userID := r.FormValue("user_id")
+	username := r.FormValue("user_username")
+	role := r.FormValue("user_role")
+	status := r.FormValue("user_status")
+	email := r.FormValue("user_email")
+	password := r.FormValue("user_password")
+
+	//to select the user (always validated)
+	validator.Validate(userID, user.UserIDRules)
+
+	// validate if present, the ones that are updated
+	if username != "" {
+		validator.Validate(username, user.UsernameRules)
 	}
 
-	err := h.UserService.UpdateUser(r.Context(), serviceParams)
+	if role != "" {
+		validator.Validate(role, user.RoleRules)
+	}
+
+	if status != "" {
+		validator.Validate(status, user.StatusRules)
+	}
+
+	if email != "" {
+		validator.Validate(email, user.EmailRules)
+	}
+
+	if password != "" {
+		validator.Validate(password, user.PasswordRules)
+	}
+
+	var serviceParams = service.UpdateUserParams{
+		UserID:   userID,
+		Username: username,
+		Role:     role,
+		Status:   status,
+		Email:    email,
+		Password: password,
+	}
+
+	ctx := r.Context()
+	err := service.UpdateUser(ctx, serviceParams)
 
 	if err != nil {
-		respondError(w, err)
+		//[!TODO] work on standard errors from user service so I know how to act if something goes wrong there
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 }
 
-func (h *Handler) AuthUser(w http.ResponseWriter, r *http.Request) {
+func AuthUser(w http.ResponseWriter, r *http.Request) {
 
 	if err := r.ParseForm(); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	token, expiration, err := h.UserService.ValidateCredentials(r.Context(), r.FormValue("user_email"), r.FormValue("user_password"))
+	token, expiration, err := service.ValidateCredentials(r.Context(), r.FormValue("user_email"), r.FormValue("user_password"))
 
 	if err != nil {
-		respondError(w, err)
+		//[!TODO] work on standard errors from user service so I know how to act if something goes wrong there
 		return
 	}
 
@@ -169,7 +241,7 @@ func (h *Handler) AuthUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"token": token, "expiresAt": expiration})
 }
 
-func (h *Handler) ValidateToken(w http.ResponseWriter, r *http.Request) {
+func ValidateToken(w http.ResponseWriter, r *http.Request) {
 
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {

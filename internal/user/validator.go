@@ -7,163 +7,122 @@ import (
 	"strconv"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/madeinly/core/models"
 )
 
-var fieldInvalidCode = "invalid value"
+/*
+	bag.Validate(username, user.UserIDRules)
+	bag.Validate(email, user.emailRules)
+	bag.Validate(password, user.passwordRule)
+	bag.Validate(role, user.roleRules)
+	bag.Validate(status, user.statusRules)
+*/
 
-func (ues *UserErrors) UserID(userID string) {
+func UserIDRules(userID string) []*models.Error {
 
-	var message []string
+	var errs []*models.Error
 
 	const exactLen = 36
 	userID = strings.TrimSpace(userID)
 
 	if len(userID) != exactLen {
-		message = append(message, "the id must be exactly 36 characters")
+		errs = append(errs, &models.Error{Field: "user_username", Message: "the id must be exactly 36 characters", Code: "unexpected_length"})
 	}
 
-	if message != nil {
-		*ues = append(*ues,
-			&UserError{
-				Code:    fieldInvalidCode,
-				Message: strings.Join(message, ", "),
-				Field:   "user_id", //| Hardcoded maybe later I can make a better system
-			})
-	}
+	return errs
 }
 
-func (ues *UserErrors) Username(username string) {
+func UsernameRules(username string) []*models.Error {
 
 	const minLen = 7
 
-	var message []string
+	var errs []*models.Error
 
 	if utf8.RuneCountInString(username) < minLen && !strings.Contains(username, " ") {
-		message = append(message, fmt.Sprintf("must be at least %d characters without spaces", minLen))
+		errs = append(errs, &models.Error{Field: "user_username", Message: fmt.Sprintf("must be at least %d characters without spaces", minLen), Code: "unexpected_length"})
 	}
 
-	if message != nil {
-		*ues = append(*ues, &UserError{
-			Code:    fieldInvalidCode,
-			Message: strings.Join(message, ", "),
-			Field:   "user_username",
-		})
-	}
+	return errs
+
 }
 
-func (ues *UserErrors) Password(password string) {
+func PasswordRules(password string) []*models.Error {
 
-	var message []string
+	var errs []*models.Error
 
 	const minLen = 8
 
 	if len(password) < minLen {
-		message = append(message, fmt.Sprintf("must be at least %d characters", minLen))
+		errs = append(errs, &models.Error{Field: "user_password", Message: fmt.Sprintf("must be at least %d characters", minLen), Code: "unexpected_length"})
 	}
 
-	if message != nil {
-
-		*ues = append(*ues, &UserError{
-			Code:    fieldInvalidCode,
-			Message: strings.Join(message, ", "),
-			Field:   "user_Password",
-		})
-
-	}
+	return errs
 
 }
 
-func (ues *UserErrors) Status(status string) {
+func StatusRules(status string) []*models.Error {
 
-	var message []string
+	var errs []*models.Error
+
 	allowed := []string{"active", "inactive"}
 	valid := slices.Contains(allowed, status)
 
 	if !valid {
-		message = append(message, "must be one of: "+strings.Join(allowed, ", "))
+		errs = append(errs, &models.Error{Field: "user_status", Message: "must be one of: " + strings.Join(allowed, ", "), Code: "invalid_options"})
 	}
 
-	if message != nil {
-		*ues = append(*ues, &UserError{
-			Code:    fieldInvalidCode,
-			Message: strings.Join(message, ", "),
-			Field:   "user_status",
-		})
-	}
-
+	return errs
 }
 
-func (ues *UserErrors) Email(email string) {
-	var message []string
+func EmailRules(email string) []*models.Error {
+
+	var errs []*models.Error
 
 	emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
 
 	if !emailRegex.MatchString(email) {
-		message = append(message, "must be a valid email address (e.g., user@example.com)")
+		errs = append(errs, &models.Error{Field: "user_email", Message: "must be a valid email address (e.g., user@example.com)", Code: "invalid_format"})
 	}
 
-	if message != nil {
-		*ues = append(*ues, &UserError{
-			Code:    fieldInvalidCode,
-			Message: strings.Join(message, ", "),
-			Field:   "user_email",
-		})
-	}
+	return errs
 }
 
-func (ues *UserErrors) Role(role string) {
-	var message []string
+func RoleRules(role string) []*models.Error {
+	var errs []*models.Error
+
 	allowed := []string{"role_admin", "role_user"}
 	valid := slices.Contains(allowed, role)
 
 	if !valid {
-		message = append(message, "must be one of: "+strings.Join(allowed, ", "))
+		errs = append(errs, &models.Error{Field: "user_role", Message: "must be one of: " + strings.Join(allowed, ", "), Code: "invalid_option"})
 	}
 
-	if message != nil {
-		*ues = append(*ues, &UserError{
-			Code:    fieldInvalidCode,
-			Message: strings.Join(message, ", "),
-			Field:   "user_role",
-		})
-	}
-
+	return errs
 }
 
-func (ues *UserErrors) Page(page string) {
-	var message []string
+func Page(page string) []*models.Error {
+	var errs []*models.Error
 
 	_, err := strconv.ParseInt(page, 10, 64)
 
 	if err != nil {
-		message = append(message, "it looks that it cant be parse, are you sure is a number?")
+		errs = append(errs, &models.Error{Field: "user_page", Message: "it looks that it cant be parse, are you sure is a number?", Code: "unexpected_format"})
 	}
 
-	if message != nil {
-		*ues = append(*ues, &UserError{
-			Code:    fieldInvalidCode,
-			Message: strings.Join(message, ", "),
-			Field:   "user_page",
-		})
-	}
+	return errs
 
 }
 
-func (ues *UserErrors) Limit(limit string) {
-	var message []string
+func Limit(limit string) []*models.Error {
+	var errs []*models.Error
 
 	_, err := strconv.ParseInt(limit, 10, 64)
 
 	if err != nil {
-		message = append(message, "it looks that it cant be parse, are you sure is a number?")
+		errs = append(errs, &models.Error{Field: "user_limit", Message: "it looks that it cant be parse, are you sure is a number?", Code: "unexpected_format"})
 	}
 
-	if message != nil {
-		*ues = append(*ues, &UserError{
-			Code:    fieldInvalidCode,
-			Message: strings.Join(message, ", "),
-			Field:   "user_limit",
-		})
-	}
+	return errs
 
 }
