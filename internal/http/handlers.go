@@ -123,6 +123,9 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 
 	var listUserParams service.ListUsersParams
 
+	//[!TODO] aqui tendria que chequear es si viene vacio "" para no validar, y en el caso de username que puede ser cualquier cosa seria bueno un metodo
+	// que valide que no viene nada malicioso
+
 	if _, exists := queryParams["user_username"]; exists {
 		username := queryParams.Get("user_username")
 		listUserParams.Username = &username
@@ -229,7 +232,17 @@ func AuthUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, expiration, err := service.ValidateCredentials(r.Context(), r.FormValue("user_email"), r.FormValue("user_password"))
+	validator := core.Validate()
+
+	userEmail := r.FormValue("user_email")
+	userPassword := r.FormValue("user_password")
+
+	validator.Validate(userEmail, user.EmailRules)
+	validator.Validate(userPassword, user.PasswordRules)
+
+	ctx := r.Context()
+
+	token, expiration, err := service.ValidateCredentials(ctx, userEmail, userPassword)
 
 	if err != nil {
 		//[!TODO] work on standard errors from user service so I know how to act if something goes wrong there
