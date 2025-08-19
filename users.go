@@ -5,6 +5,7 @@ import (
 	_ "embed"
 
 	"github.com/google/uuid"
+	"github.com/madeinly/core"
 	coreModels "github.com/madeinly/core/models"
 
 	"github.com/madeinly/users/internal/auth"
@@ -31,14 +32,17 @@ var initialSchema string
 func setupUsers() error {
 
 	repo := repository.NewUserRepo()
-
 	ctx := context.Background()
+
+	settings := core.Settings()
+	username := settings.User
+	password := settings.Password
 
 	_, err := repo.Create(ctx, repository.CreateUserParams{
 		UserID:   uuid.NewString(),
-		Username: "admin",
-		Email:    "example@email.com",
-		Password: auth.HashPassword("qwer1234"),
+		Username: username,
+		Email:    "change@email.com",
+		Password: auth.HashPassword(password),
 		Role:     "role_admin",
 		Status:   "active",
 	})
