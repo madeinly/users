@@ -10,7 +10,13 @@ import (
 	"github.com/madeinly/users/internal/repository"
 )
 
-func ValidateCredentials(ctx context.Context, userEmail string, userPassword string) (string, string, error) {
+func CheckCredentials(userEmail string, username string, userPassword string) (bool, error) {
+
+	return true, nil
+
+}
+
+func ValidateCredentials(ctx context.Context, userEmail string, username string, userPassword string) (string, string, error) {
 
 	repo := repository.NewUserRepo()
 
@@ -24,7 +30,7 @@ func ValidateCredentials(ctx context.Context, userEmail string, userPassword str
 
 	tokenExpiration := time.Now().Add(2 * time.Hour)
 
-	token, err := auth.GenerateToken(user.ID, sessionToken, user.Role, tokenExpiration)
+	token, err := auth.GenerateToken(user.ID, sessionToken, user.Role)
 
 	if err != nil {
 		return "", "", err

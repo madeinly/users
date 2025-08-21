@@ -236,13 +236,20 @@ func AuthUser(w http.ResponseWriter, r *http.Request) {
 
 	userEmail := r.FormValue("user_email")
 	userPassword := r.FormValue("user_password")
+	userUsername := r.FormValue("user_username")
 
 	validator.Validate(userEmail, user.EmailRules)
+	validator.Validate(userUsername, user.UsernameRules)
 	validator.Validate(userPassword, user.PasswordRules)
+
+	if validator.HasErrors() {
+		validator.WriteHTTP(w)
+		return
+	}
 
 	ctx := r.Context()
 
-	token, expiration, err := service.ValidateCredentials(ctx, userEmail, userPassword)
+	token, expiration, err := service.ValidateCredentials(ctx, userEmail, userUsername, userPassword)
 
 	if err != nil {
 		//[!TODO] work on standard errors from user service so I know how to act if something goes wrong there
