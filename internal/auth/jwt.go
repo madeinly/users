@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"fmt"
+
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/madeinly/core"
 )
@@ -13,16 +15,14 @@ var settings = core.Settings()
 var jwtSecret = []byte(settings.JWTSalt) // Change this!
 
 type Claims struct {
-	UserID       string `json:"user_id"`
 	SessionToken string `json:"session_token"`
 	Role         string `json:"user_roleID"`
 	jwt.RegisteredClaims
 }
 
-func GenerateToken(userID, sessionToken, role string) (string, error) {
+func GenerateToken(sessionToken, role string) (string, error) {
 
 	claims := &Claims{
-		UserID:           userID,
 		SessionToken:     sessionToken,
 		Role:             role,
 		RegisteredClaims: jwt.RegisteredClaims{},
@@ -32,6 +32,7 @@ func GenerateToken(userID, sessionToken, role string) (string, error) {
 
 	tokenString, err := token.SignedString(jwtSecret)
 	if err != nil {
+		fmt.Println(err.Error())
 		return "", err
 	}
 

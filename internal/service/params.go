@@ -24,3 +24,9 @@ type UpdateUserParams struct {
 	Email    string
 	Password string
 }
+
+type ValidateCredentialsParams struct {
+	Email    string
+	Username string
+	Password string
+}

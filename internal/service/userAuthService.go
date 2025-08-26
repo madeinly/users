@@ -2,12 +2,20 @@ package service
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/madeinly/core"
 	"github.com/madeinly/users/internal/auth"
 	"github.com/madeinly/users/internal/queries/userQuery"
 	"github.com/madeinly/users/internal/repository"
+	"github.com/madeinly/users/internal/user"
+)
+
+var (
+	ErrInvalidCredentials = errors.New("invalid credentials")
+	ErrServerFailure      = errors.New("server issue check logs")
 )
 
 func CheckCredentials(userEmail string, username string, userPassword string) (bool, error) {
@@ -16,24 +24,58 @@ func CheckCredentials(userEmail string, username string, userPassword string) (b
 
 }
 
-func ValidateCredentials(ctx context.Context, userEmail string, username string, userPassword string) (string, string, error) {
+func ValidateCredentials(ctx context.Context, params ValidateCredentialsParams) (string, error) {
+
+	//================================= validation
+
+	errors := core.Validate()
+
+	if params.Email == "" && params.Username == "" {
+		errors.Add("authentication", "--agregar-status-code--", "email and username can't both be empty")
+	}
+
+	if params.Password == "" {
+		errors.Add("authentication", "--agregar-status-code--", "password can't be empty")
+	}
+
+	if errors.HasErrors() {
+		return "", errors
+	}
+
+	if params.Email != "" {
+		errors.Validate(params.Email, user.EmailRules)
+	}
+
+	if params.Username != "" {
+		errors.Validate(params.Username, user.UsernameRules)
+	}
+
+	errors.Validate(params.Password, user.PasswordRules)
+
+	if errors.HasErrors() {
+		return "", errors
+	}
+
+	//=================================
+
+	//NOTE: maybe could not use a repo and instead add all in here
 
 	repo := repository.NewUserRepo()
 
-	user, err := repo.ValidateCredentials(userEmail, userPassword)
+	user, err := repo.ValidateCredentials(params.Email, params.Password)
 
 	if err != nil {
-		return "", "", err
+		return "", ErrInvalidCredentials
 	}
 
 	sessionToken := uuid.New().String()
 
-	tokenExpiration := time.Now().Add(2 * time.Hour)
+	expirationTime := time.Now().Add(2 * time.Hour)
 
-	token, err := auth.GenerateToken(user.ID, sessionToken, user.Role)
+	token, err := auth.GenerateToken(sessionToken, user.Role)
 
 	if err != nil {
-		return "", "", err
+		return "", ErrServerFailure
 	}
 
 	// Update or create session
@@ -43,19 +85,19 @@ func ValidateCredentials(ctx context.Context, userEmail string, username string,
 		err = repo.CreateUserSession(ctx, userQuery.CreateSessionParams{
 			ID:          uuid.New().String(),
 			UserID:      user.ID,
-			Token:       token,
+			Token:       sessionToken,
 			SessionData: "[]",
-			ExpiresAt:   tokenExpiration.Format("2006-01-02 15:04:05"),
+			ExpiresAt:   expirationTime.Format("2006-01-02 15:04:05"),
 		})
 
 	} else {
-		err = repo.UpdateUserSession(user.ID, token, tokenExpiration.Format("2006-01-02 15:04:05"))
+		err = repo.UpdateUserSession(user.ID, sessionToken, expirationTime.Format("2006-01-02 15:04:05"))
 	}
 
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
 
-	return token, tokenExpiration.Format("2006-01-02 15:04:05"), nil
+	return token, nil
 
 }

@@ -35,7 +35,7 @@ func UserIDRules(userID string) []*models.Error {
 
 func UsernameRules(username string) []*models.Error {
 
-	const minLen = 7
+	const minLen = 5
 
 	var errs []*models.Error
 

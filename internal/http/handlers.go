@@ -2,6 +2,7 @@ package http
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strings"
 
@@ -232,33 +233,39 @@ func AuthUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	validator := core.Validate()
+	email := r.FormValue("user_email")
+	password := r.FormValue("user_password")
+	username := r.FormValue("user_username")
 
-	userEmail := r.FormValue("user_email")
-	userPassword := r.FormValue("user_password")
-	userUsername := r.FormValue("user_username")
+	token, err := service.ValidateCredentials(r.Context(), service.ValidateCredentialsParams{
+		Email:    email,
+		Username: username,
+		Password: password,
+	})
 
-	validator.Validate(userEmail, user.EmailRules)
-	validator.Validate(userUsername, user.UsernameRules)
-	validator.Validate(userPassword, user.PasswordRules)
+	if err != nil {
+		if errors, ok := core.IsErrors(err); ok {
+			if errors.HasErrors() {
+				errors.WriteHTTP(w)
+				return
+			}
+		}
+	}
 
-	if validator.HasErrors() {
-		validator.WriteHTTP(w)
+	if err != nil && errors.Is(err, service.ErrInvalidCredentials) {
+		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
-	ctx := r.Context()
-
-	token, expiration, err := service.ValidateCredentials(ctx, userEmail, userUsername, userPassword)
-
-	if err != nil {
-		//[!TODO] work on standard errors from user service so I know how to act if something goes wrong there
+	if err != nil && errors.Is(err, service.ErrServerFailure) {
+		core.Log("auth user, error on: ", err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{"token": token, "expiresAt": expiration})
+	json.NewEncoder(w).Encode(map[string]string{"token": token})
 }
 
 func ValidateToken(w http.ResponseWriter, r *http.Request) {

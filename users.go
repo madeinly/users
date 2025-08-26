@@ -5,7 +5,6 @@ import (
 	_ "embed"
 
 	"github.com/google/uuid"
-	"github.com/madeinly/core"
 	coreModels "github.com/madeinly/core/models"
 
 	"github.com/madeinly/users/internal/auth"
@@ -16,11 +15,13 @@ import (
 
 var UserMigration = coreModels.Migration{
 	Schema: initialSchema,
+	Name:   "users",
 }
 
 var Feature = coreModels.FeaturePackage{
 	Name:      "users",
 	Migration: UserMigration,
+	Args:      args,
 	Setup:     setupUsers,
 	Routes:    http.Routes,
 	Cmd:       cmd.Execute,
@@ -29,20 +30,35 @@ var Feature = coreModels.FeaturePackage{
 //go:embed internal/queries/initial_schema.sql
 var initialSchema string
 
-func setupUsers() error {
+var args = []coreModels.Arg{
+	{
+		Name:        "username",
+		Default:     "admin",
+		Required:    false,
+		Description: "the initial super admin",
+	},
+	{
+		Name:        "email",
+		Required:    true,
+		Description: "initial email for super admin",
+	},
+	{
+		Name:        "password",
+		Required:    true,
+		Description: "password for initial super admin",
+	},
+}
+
+func setupUsers(params map[string]string) error {
 
 	repo := repository.NewUserRepo()
 	ctx := context.Background()
 
-	settings := core.Settings()
-	username := settings.User
-	password := settings.Password
-
 	_, err := repo.Create(ctx, repository.CreateUserParams{
 		UserID:   uuid.NewString(),
-		Username: username,
-		Email:    "change@email.com",
-		Password: auth.HashPassword(password),
+		Username: params["username"],
+		Email:    params["email"],
+		Password: auth.HashPassword(params["password"]),
 		Role:     "role_admin",
 		Status:   "active",
 	})
