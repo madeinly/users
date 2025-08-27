@@ -1,6 +1,8 @@
 package http
 
 import (
+	"net/http"
+
 	coreModels "github.com/madeinly/core/models"
 )
 
@@ -8,46 +10,36 @@ var Routes = []coreModels.Route{
 	{
 		Type:    "POST",
 		Pattern: "/user",
-		Handler: CreateUser,
-		// Handler: server.AuthMiddleware(http.HandlerFunc(server.CreateUser)),
+		Handler: Auth(http.HandlerFunc(CreateUser)),
 	},
 	{
 		Type:    "GET",
 		Pattern: "/user",
-		Handler: GetUser,
-		// Handler: server.AuthMiddleware(http.HandlerFunc(server.GetUser)),
+		Handler: Auth(http.HandlerFunc(GetUser)),
 	},
 	{
 		Type:    "GET",
 		Pattern: "/users",
-		// Handler: server.AuthMiddleware(http.HandlerFunc(server.GetUsers)),
-		Handler: GetUsers,
+		Handler: Auth(http.HandlerFunc(GetUsers)),
 	},
 	{
 		Type:    "PATCH",
 		Pattern: "/user",
-		Handler: UpdateUser,
-		// Handler: server.AuthMiddleware(http.HandlerFunc(server.UpdateUser)),
+		Handler: Auth(http.HandlerFunc(UpdateUser)),
 	},
 	{
 		Type:    "POST",
 		Pattern: "/user/auth",
-		Handler: AuthUser,
+		Handler: http.HandlerFunc(AuthUser),
 	},
 	{
 		Type:    "DELETE",
 		Pattern: "/user",
-		Handler: DeleteUser,
-		// Handler: server.AuthMiddleware(http.HandlerFunc(server.DeleteUser)),
+		Handler: Auth(http.HandlerFunc(DeleteUser)),
 	},
 	{
 		Type:    "POST",
 		Pattern: "/user/validate",
-		Handler: ValidateToken,
+		Handler: http.HandlerFunc(ValidateToken),
 	},
-	// {
-	// 	Type:    "GET",
-	// 	Pattern: "/users/check-username",
-	// 	Handler: http.HandlerFunc(server.CheckUsername),
-	// },
 }

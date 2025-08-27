@@ -61,6 +61,26 @@ func (q *Queries) DeleteSession(ctx context.Context, id string) error {
 	return err
 }
 
+const getSessionBySessionToken = `-- name: GetSessionBySessionToken :one
+SELECT id, user_id, token, session_data, created_at, expires_at, last_accessed_at FROM user_sessions
+WHERE token = ?1 Limit 1
+`
+
+func (q *Queries) GetSessionBySessionToken(ctx context.Context, token string) (UserSession, error) {
+	row := q.queryRow(ctx, q.getSessionBySessionTokenStmt, getSessionBySessionToken, token)
+	var i UserSession
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Token,
+		&i.SessionData,
+		&i.CreatedAt,
+		&i.ExpiresAt,
+		&i.LastAccessedAt,
+	)
+	return i, err
+}
+
 const getSessionByToken = `-- name: GetSessionByToken :one
 SELECT id, user_id, token, session_data, created_at, expires_at, last_accessed_at FROM user_sessions
 WHERE token = ?1 LIMIT 1

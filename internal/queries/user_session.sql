@@ -14,6 +14,11 @@ SELECT * FROM user_sessions
 WHERE user_id = ?1 Limit 1;
 
 
+-- name: GetSessionBySessionToken :one
+SELECT * FROM user_sessions
+WHERE token = ?1 Limit 1;
+
+
 -- name: UpdateSessionToken :one
 UPDATE user_sessions
 SET 

@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"time"
 
@@ -16,13 +17,8 @@ import (
 var (
 	ErrInvalidCredentials = errors.New("invalid credentials")
 	ErrServerFailure      = errors.New("server issue check logs")
+	ErrSessionExpired     = errors.New("session has expired")
 )
-
-func CheckCredentials(userEmail string, username string, userPassword string) (bool, error) {
-
-	return true, nil
-
-}
 
 func ValidateCredentials(ctx context.Context, params ValidateCredentialsParams) (string, error) {
 
@@ -99,5 +95,44 @@ func ValidateCredentials(ctx context.Context, params ValidateCredentialsParams) 
 	}
 
 	return token, nil
+
+}
+
+func AuthenticateWithToken(jwtToken string) (bool, error) {
+
+	claims, err := auth.ParseToken(jwtToken)
+
+	if err != nil {
+		return false, err
+	}
+
+	sessionToken := claims.SessionToken
+
+	q := userQuery.New(core.DB())
+
+	session, err := q.GetSessionByToken(context.Background(), sessionToken)
+
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
+		return false, nil
+	}
+
+	if err != nil {
+		core.Log(err.Error(), "could not fetch session from user")
+		return false, ErrServerFailure
+	}
+
+	exp, err := time.ParseInLocation("2006-01-02 15:04:05", session.ExpiresAt, time.Local)
+
+	if err != nil {
+		core.Log(err.Error(), "could not parse the expiration of the session")
+		return false, ErrServerFailure
+	}
+
+	now := time.Now()
+	if now.After(exp) {
+		return false, ErrSessionExpired
+	}
+
+	return true, nil
 
 }

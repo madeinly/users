@@ -3,11 +3,11 @@ package http
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/madeinly/core"
-	"github.com/madeinly/users/internal/auth"
 	"github.com/madeinly/users/internal/service"
 	"github.com/madeinly/users/internal/user"
 )
@@ -271,6 +271,8 @@ func AuthUser(w http.ResponseWriter, r *http.Request) {
 func ValidateToken(w http.ResponseWriter, r *http.Request) {
 
 	authHeader := r.Header.Get("Authorization")
+
+	fmt.Println(authHeader)
 	if authHeader == "" {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
@@ -281,12 +283,24 @@ func ValidateToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+	token := strings.TrimPrefix(authHeader, "Bearer ")
 
-	_, err := auth.ParseToken(tokenString)
+	valid, err := service.AuthenticateWithToken(token)
+
+	if err != nil && errors.Is(err, service.ErrSessionExpired) {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
 
 	if err != nil {
-		w.WriteHeader(http.StatusExpectationFailed)
+		core.Log(err.Error(), "there was an issue with authenticate with token service")
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	if !valid {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
 	}
 
 	w.WriteHeader(http.StatusOK)

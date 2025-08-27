@@ -48,6 +48,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.deleteUserStmt, err = db.PrepareContext(ctx, deleteUser); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteUser: %w", err)
 	}
+	if q.getSessionBySessionTokenStmt, err = db.PrepareContext(ctx, getSessionBySessionToken); err != nil {
+		return nil, fmt.Errorf("error preparing query GetSessionBySessionToken: %w", err)
+	}
 	if q.getSessionByTokenStmt, err = db.PrepareContext(ctx, getSessionByToken); err != nil {
 		return nil, fmt.Errorf("error preparing query GetSessionByToken: %w", err)
 	}
@@ -145,6 +148,11 @@ func (q *Queries) Close() error {
 	if q.deleteUserStmt != nil {
 		if cerr := q.deleteUserStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteUserStmt: %w", cerr)
+		}
+	}
+	if q.getSessionBySessionTokenStmt != nil {
+		if cerr := q.getSessionBySessionTokenStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getSessionBySessionTokenStmt: %w", cerr)
 		}
 	}
 	if q.getSessionByTokenStmt != nil {
@@ -274,65 +282,67 @@ func (q *Queries) queryRow(ctx context.Context, stmt *sql.Stmt, query string, ar
 }
 
 type Queries struct {
-	db                         DBTX
-	tx                         *sql.Tx
-	addUserMetaStmt            *sql.Stmt
-	cleanupExpiredSessionsStmt *sql.Stmt
-	countUsersStmt             *sql.Stmt
-	createSessionStmt          *sql.Stmt
-	createUserStmt             *sql.Stmt
-	deleteMetasStmt            *sql.Stmt
-	deleteSessionStmt          *sql.Stmt
-	deleteUserStmt             *sql.Stmt
-	getSessionByTokenStmt      *sql.Stmt
-	getSessionByUserIDStmt     *sql.Stmt
-	getUserStmt                *sql.Stmt
-	getUserByEmailStmt         *sql.Stmt
-	getUserByIDStmt            *sql.Stmt
-	getUserByUsernameStmt      *sql.Stmt
-	getUsersStmt               *sql.Stmt
-	updateSessionDataStmt      *sql.Stmt
-	updateSessionTokenStmt     *sql.Stmt
-	updateUserStmt             *sql.Stmt
-	updateUserEmailStmt        *sql.Stmt
-	updateUserLastLoginStmt    *sql.Stmt
-	updateUserMetaStmt         *sql.Stmt
-	updateUserPasswordStmt     *sql.Stmt
-	updateUserRoleStmt         *sql.Stmt
-	updateUserStatusStmt       *sql.Stmt
-	updateUserUsernameStmt     *sql.Stmt
-	userExistsStmt             *sql.Stmt
+	db                           DBTX
+	tx                           *sql.Tx
+	addUserMetaStmt              *sql.Stmt
+	cleanupExpiredSessionsStmt   *sql.Stmt
+	countUsersStmt               *sql.Stmt
+	createSessionStmt            *sql.Stmt
+	createUserStmt               *sql.Stmt
+	deleteMetasStmt              *sql.Stmt
+	deleteSessionStmt            *sql.Stmt
+	deleteUserStmt               *sql.Stmt
+	getSessionBySessionTokenStmt *sql.Stmt
+	getSessionByTokenStmt        *sql.Stmt
+	getSessionByUserIDStmt       *sql.Stmt
+	getUserStmt                  *sql.Stmt
+	getUserByEmailStmt           *sql.Stmt
+	getUserByIDStmt              *sql.Stmt
+	getUserByUsernameStmt        *sql.Stmt
+	getUsersStmt                 *sql.Stmt
+	updateSessionDataStmt        *sql.Stmt
+	updateSessionTokenStmt       *sql.Stmt
+	updateUserStmt               *sql.Stmt
+	updateUserEmailStmt          *sql.Stmt
+	updateUserLastLoginStmt      *sql.Stmt
+	updateUserMetaStmt           *sql.Stmt
+	updateUserPasswordStmt       *sql.Stmt
+	updateUserRoleStmt           *sql.Stmt
+	updateUserStatusStmt         *sql.Stmt
+	updateUserUsernameStmt       *sql.Stmt
+	userExistsStmt               *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 	return &Queries{
-		db:                         tx,
-		tx:                         tx,
-		addUserMetaStmt:            q.addUserMetaStmt,
-		cleanupExpiredSessionsStmt: q.cleanupExpiredSessionsStmt,
-		countUsersStmt:             q.countUsersStmt,
-		createSessionStmt:          q.createSessionStmt,
-		createUserStmt:             q.createUserStmt,
-		deleteMetasStmt:            q.deleteMetasStmt,
-		deleteSessionStmt:          q.deleteSessionStmt,
-		deleteUserStmt:             q.deleteUserStmt,
-		getSessionByTokenStmt:      q.getSessionByTokenStmt,
-		getSessionByUserIDStmt:     q.getSessionByUserIDStmt,
-		getUserStmt:                q.getUserStmt,
-		getUserByEmailStmt:         q.getUserByEmailStmt,
-		getUserByIDStmt:            q.getUserByIDStmt,
-		getUserByUsernameStmt:      q.getUserByUsernameStmt,
-		getUsersStmt:               q.getUsersStmt,
-		updateSessionDataStmt:      q.updateSessionDataStmt,
-		updateSessionTokenStmt:     q.updateSessionTokenStmt,
-		updateUserStmt:             q.updateUserStmt,
-		updateUserEmailStmt:        q.updateUserEmailStmt,
-		updateUserLastLoginStmt:    q.updateUserLastLoginStmt,
-		updateUserMetaStmt:         q.updateUserMetaStmt,
-		updateUserPasswordStmt:     q.updateUserPasswordStmt,
-		updateUserRoleStmt:         q.updateUserRoleStmt,
-		updateUserStatusStmt:       q.updateUserStatusStmt,
-		updateUserUsernameStmt:     q.updateUserUsernameStmt,
-		userExistsStmt:             q.userExistsStmt,
+		db:                           tx,
+		tx:                           tx,
+		addUserMetaStmt:              q.addUserMetaStmt,
+		cleanupExpiredSessionsStmt:   q.cleanupExpiredSessionsStmt,
+		countUsersStmt:               q.countUsersStmt,
+		createSessionStmt:            q.createSessionStmt,
+		createUserStmt:               q.createUserStmt,
+		deleteMetasStmt:              q.deleteMetasStmt,
+		deleteSessionStmt:            q.deleteSessionStmt,
+		deleteUserStmt:               q.deleteUserStmt,
+		getSessionBySessionTokenStmt: q.getSessionBySessionTokenStmt,
+		getSessionByTokenStmt:        q.getSessionByTokenStmt,
+		getSessionByUserIDStmt:       q.getSessionByUserIDStmt,
+		getUserStmt:                  q.getUserStmt,
+		getUserByEmailStmt:           q.getUserByEmailStmt,
+		getUserByIDStmt:              q.getUserByIDStmt,
+		getUserByUsernameStmt:        q.getUserByUsernameStmt,
+		getUsersStmt:                 q.getUsersStmt,
+		updateSessionDataStmt:        q.updateSessionDataStmt,
+		updateSessionTokenStmt:       q.updateSessionTokenStmt,
+		updateUserStmt:               q.updateUserStmt,
+		updateUserEmailStmt:          q.updateUserEmailStmt,
+		updateUserLastLoginStmt:      q.updateUserLastLoginStmt,
+		updateUserMetaStmt:           q.updateUserMetaStmt,
+		updateUserPasswordStmt:       q.updateUserPasswordStmt,
+		updateUserRoleStmt:           q.updateUserRoleStmt,
+		updateUserStatusStmt:         q.updateUserStatusStmt,
+		updateUserUsernameStmt:       q.updateUserUsernameStmt,
+		userExistsStmt:               q.userExistsStmt,
 	}
 }

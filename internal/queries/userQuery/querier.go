@@ -17,6 +17,7 @@ type Querier interface {
 	DeleteMetas(ctx context.Context, userID string) error
 	DeleteSession(ctx context.Context, id string) error
 	DeleteUser(ctx context.Context, id string) error
+	GetSessionBySessionToken(ctx context.Context, token string) (UserSession, error)
 	GetSessionByToken(ctx context.Context, token string) (UserSession, error)
 	GetSessionByUserID(ctx context.Context, userID string) (UserSession, error)
 	GetUser(ctx context.Context, id string) (GetUserRow, error)
