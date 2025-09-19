@@ -5,20 +5,20 @@ import (
 	_ "embed"
 
 	"github.com/google/uuid"
-	coreModels "github.com/madeinly/core/models"
+	core "github.com/madeinly/core/v1"
 
-	"github.com/madeinly/users/internal/auth"
-	"github.com/madeinly/users/internal/cmd"
-	"github.com/madeinly/users/internal/http"
-	"github.com/madeinly/users/internal/repository"
+	"github.com/madeinly/users/internal/features/auth"
+	"github.com/madeinly/users/internal/features/user"
+	"github.com/madeinly/users/internal/gateways/cmd"
+	"github.com/madeinly/users/internal/gateways/http"
 )
 
-var UserMigration = coreModels.Migration{
+var UserMigration = core.Migration{
 	Schema: initialSchema,
 	Name:   "users",
 }
 
-var Feature = coreModels.FeaturePackage{
+var Feature = core.FeaturePackage{
 	Name:      "users",
 	Migration: UserMigration,
 	Args:      args,
@@ -27,10 +27,10 @@ var Feature = coreModels.FeaturePackage{
 	Cmd:       cmd.Execute,
 }
 
-//go:embed internal/queries/initial_schema.sql
+//go:embed internal/drivers/sqlite/sqlc_src/initial_schema.sql
 var initialSchema string
 
-var args = []coreModels.Arg{
+var args = []core.Arg{
 	{
 		Name:        "username",
 		Default:     "admin",
@@ -51,10 +51,9 @@ var args = []coreModels.Arg{
 
 func setupUsers(params map[string]string) error {
 
-	repo := repository.NewUserRepo()
 	ctx := context.Background()
 
-	_, err := repo.Create(ctx, repository.CreateUserParams{
+	_, err := user.Create(ctx, user.CreateUserParams{
 		UserID:   uuid.NewString(),
 		Username: params["username"],
 		Email:    params["email"],
