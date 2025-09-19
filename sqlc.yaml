@@ -1,12 +1,12 @@
 version: "2"
 sql:
   - engine: "sqlite"
-    schema: ["internal/queries/initial_schema.sql"]
-    queries: "internal/queries/*"
+    schema: ["internal/drivers/sqlite/sqlc_src/initial_schema.sql"]
+    queries: "internal/drivers/sqlite/sqlc_src/*.sql"
     gen:
       go:
-        package: "userQuery"
-        out: "internal/queries/userQuery"
+        package: "sqlc"
+        out: "internal/drivers/sqlite/sqlc"
         overrides:
           - db_type: "boolean"
             go_type: "bool"
