@@ -7,7 +7,7 @@ import (
 	"github.com/madeinly/users/internal/features/user"
 )
 
-type UsersListParams struct {
+type ListUsersParams struct {
 	Username *string
 	Role     *string
 	Status   *string
@@ -17,7 +17,7 @@ type UsersListParams struct {
 
 // [TODO] study the relationship between page offset and limit and see if there is a better handling for the
 // values that the current implementation
-func ListUsers(ctx context.Context, params UsersListParams) (user.UsersPage, error) {
+func ListUsers(ctx context.Context, params ListUsersParams) (user.UsersPage, error) {
 
 	var repoParams = user.UserListParams{
 		Limit: 10,

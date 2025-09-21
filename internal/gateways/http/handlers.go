@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	core "github.com/madeinly/core/v1"
+	"github.com/madeinly/users/internal/features/user"
 	"github.com/madeinly/users/internal/flows"
-	"github.com/madeinly/users/internal/user"
 )
 
 func CreateUser(w http.ResponseWriter, r *http.Request) {
@@ -76,7 +76,7 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if user.IsEmpty() {
+	if user.ID == "" {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -207,7 +207,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var serviceParams = flows.UpdateUserParams{
-		UserID:   userID,
+		ID:       userID,
 		Username: username,
 		Role:     role,
 		Status:   status,
