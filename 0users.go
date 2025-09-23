@@ -5,7 +5,7 @@ import (
 	_ "embed"
 
 	"github.com/google/uuid"
-	core "github.com/madeinly/core/v1"
+	"github.com/madeinly/core"
 
 	"github.com/madeinly/users/internal/features/auth"
 	"github.com/madeinly/users/internal/features/user"

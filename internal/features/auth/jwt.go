@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/golang-jwt/jwt/v5"
-	core "github.com/madeinly/core/v1"
+	"github.com/madeinly/core"
 )
 
 type ResToken struct {

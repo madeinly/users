@@ -3,7 +3,7 @@ package auth
 import (
 	"context"
 
-	core "github.com/madeinly/core/v1"
+	"github.com/madeinly/core"
 	"github.com/madeinly/users/internal/drivers/sqlite/sqlc"
 	"golang.org/x/crypto/bcrypt"
 )

@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	core "github.com/madeinly/core/v1"
+	"github.com/madeinly/core"
 	"github.com/madeinly/users/internal/features/user"
 	"github.com/madeinly/users/internal/flows"
 )

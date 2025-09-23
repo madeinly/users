@@ -3,7 +3,7 @@ package http
 import (
 	"net/http"
 
-	core "github.com/madeinly/core/v1"
+	"github.com/madeinly/core"
 )
 
 var Routes = []core.Route{

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	core "github.com/madeinly/core/v1"
+	"github.com/madeinly/core"
 )
 
 /*
