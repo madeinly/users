@@ -2,6 +2,8 @@ package flows
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -20,37 +22,37 @@ type ValidateCredentialsParams struct {
 
 func ValidateCredentials(ctx context.Context, params ValidateCredentialsParams) (string, error) {
 
-	errors := core.Validate()
+	//========================= fast errors
+
+	fastErrors := core.Validate()
 
 	if params.Email == "" && params.Username == "" {
-		errors.Add("authentication", "--agregar-status-code--", "email and username can't both be empty")
+		fastErrors.Add("authentication", "--agregar-status-code--", "email and username can't both be empty")
 	}
 
 	if params.Password == "" {
-		errors.Add("authentication", "--agregar-status-code--", "password can't be empty")
+		fastErrors.Add("authentication", "--agregar-status-code--", "password can't be empty")
 	}
 
-	if errors.HasErrors() {
-		return "", errors
+	if fastErrors.HasErrors() {
+		return "", fastErrors
 	}
 
 	if params.Email != "" {
-		errors.Validate(params.Email, user.EmailRules)
+		fastErrors.Validate(params.Email, user.EmailRules)
 	}
 
 	if params.Username != "" {
-		errors.Validate(params.Username, user.UsernameRules)
+		fastErrors.Validate(params.Username, user.UsernameRules)
 	}
 
-	errors.Validate(params.Password, user.PasswordRules)
+	fastErrors.Validate(params.Password, user.PasswordRules)
 
-	if errors.HasErrors() {
-		return "", errors
+	if fastErrors.HasErrors() {
+		return "", fastErrors
 	}
 
 	//=================================
-
-	//NOTE: maybe could not use a repo and instead add all in here
 
 	u, err := auth.ValidateCredentials(params.Email, params.Password)
 
@@ -68,7 +70,9 @@ func ValidateCredentials(ctx context.Context, params ValidateCredentialsParams) 
 		return "", ErrServerFailure
 	}
 
-	if u.ID == "" {
+	err = session.UpdateUserSession(u.ID, sessionToken, expirationTime.Format("2006-01-02 15:04:05"))
+
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
 
 		err = session.CreateUserSession(ctx, sqlc.CreateSessionParams{
 			ID:          uuid.New().String(),
@@ -78,12 +82,10 @@ func ValidateCredentials(ctx context.Context, params ValidateCredentialsParams) 
 			ExpiresAt:   expirationTime.Format("2006-01-02 15:04:05"),
 		})
 
-	} else {
-		err = session.UpdateUserSession(u.ID, sessionToken, expirationTime.Format("2006-01-02 15:04:05"))
 	}
 
 	if err != nil {
-		return "", err
+		return "", ErrServerFailure
 	}
 
 	return token, nil

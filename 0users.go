@@ -18,19 +18,19 @@ var UserMigration = core.Migration{
 	Name:   "users",
 }
 
-var Feature = core.FeaturePackage{
-	Name:      "users",
-	Migration: UserMigration,
-	Args:      args,
-	Setup:     setupUsers,
-	Routes:    http.Routes,
-	Cmd:       cmd.Execute,
+var Feature = core.Mod{
+	Name:        "users",
+	Migration:   UserMigration,
+	InstallArgs: installArgs,
+	Setup:       setupUsers,
+	Routes:      http.Routes,
+	Cmd:         cmd.Execute,
 }
 
 //go:embed internal/drivers/sqlite/sqlc_src/initial_schema.sql
 var initialSchema string
 
-var args = []core.Arg{
+var installArgs = []core.InstallArg{
 	{
 		Name:        "username",
 		Default:     "admin",

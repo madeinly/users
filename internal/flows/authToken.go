@@ -11,12 +11,6 @@ import (
 	"github.com/madeinly/users/internal/features/auth"
 )
 
-var (
-	ErrInvalidCredentials = errors.New("invalid credentials")
-	ErrServerFailure      = errors.New("server issue check logs")
-	ErrSessionExpired     = errors.New("session has expired")
-)
-
 func AuthenticateWithToken(jwtToken string) (bool, error) {
 
 	claims, err := auth.ParseToken(jwtToken)

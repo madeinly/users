@@ -10,17 +10,16 @@ import (
 )
 
 type User struct {
-	ID                string
-	Role              string
-	Username          string
-	Email             string
-	Password          string
-	Status            string
-	PasswordUpdatedAt string
-	CreatedAt         string
-	UpdatedAt         string
-	UserStatus        string
-	LastLogin         string
+	ID                string `json:"user_id"`
+	Role              string `json:"user_role"`
+	Username          string `json:"user_username"`
+	Email             string `json:"user_email"`
+	Password          string `json:"-"`
+	Status            string `json:"user_status"`
+	PasswordUpdatedAt string `json:"-"`
+	CreatedAt         string `json:"user_createdAt"`
+	UpdatedAt         string `json:"user_updatedAt"`
+	LastLogin         string `json:"user_lastLoginAT"`
 }
 
 func GetByID(ctx context.Context, userID string) (User, error) {
@@ -50,7 +49,6 @@ func GetByID(ctx context.Context, userID string) (User, error) {
 		PasswordUpdatedAt: u.PasswordUpdatedAt,
 		CreatedAt:         u.CreatedAt,
 		UpdatedAt:         u.UpdatedAt,
-		UserStatus:        u.Status,
 		LastLogin:         s.LastAccessedAt,
 	}, nil
 
