@@ -4,11 +4,9 @@ import (
 	"context"
 	_ "embed"
 
-	"github.com/google/uuid"
 	"github.com/madeinly/core"
 
-	"github.com/madeinly/users/internal/features/auth"
-	"github.com/madeinly/users/internal/features/user"
+	"github.com/madeinly/users/internal/flows"
 	"github.com/madeinly/users/internal/gateways/cmd"
 	"github.com/madeinly/users/internal/gateways/http"
 )
@@ -27,7 +25,7 @@ var Feature = core.Mod{
 	Cmd:         cmd.Execute,
 }
 
-//go:embed internal/drivers/sqlite/sqlc_src/initial_schema.sql
+//go:embed internal/drivers/sqlite/queries/migration.sql
 var initialSchema string
 
 var installArgs = []core.InstallArg{
@@ -53,11 +51,10 @@ func setupUsers(params map[string]string) error {
 
 	ctx := context.Background()
 
-	_, err := user.Create(ctx, user.CreateUserParams{
-		UserID:   uuid.NewString(),
+	err := flows.RegisterUser(ctx, flows.RegisteUserParams{
 		Username: params["username"],
 		Email:    params["email"],
-		Password: auth.HashPassword(params["password"]),
+		Password: params["password"],
 		Role:     "role_admin",
 		Status:   "active",
 	})

@@ -7,13 +7,6 @@ import (
 	"github.com/madeinly/users/internal/drivers/sqlite/sqlc"
 )
 
-type UsersPage struct {
-	Limit int64 `json:"user_limit"`
-	Page  int64 `json:"user_page"`
-	Total int   `json:"user_total"`
-	Users []User
-}
-
 type UserListParams struct {
 	Username string
 	Status   string

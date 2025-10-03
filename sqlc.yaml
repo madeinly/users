@@ -1,8 +1,8 @@
 version: "2"
 sql:
   - engine: "sqlite"
-    schema: ["internal/drivers/sqlite/sqlc_src/initial_schema.sql"]
-    queries: "internal/drivers/sqlite/sqlc_src/*.sql"
+    schema: ["internal/drivers/sqlite/queries/migration.sql"]
+    queries: "internal/drivers/sqlite/queries/*.sql"
     gen:
       go:
         package: "sqlc"

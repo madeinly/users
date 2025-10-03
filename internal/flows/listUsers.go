@@ -15,9 +15,29 @@ type ListUsersParams struct {
 	Limit    *string
 }
 
+type UsersPage struct {
+	Limit int64 `json:"user_limit"`
+	Page  int64 `json:"user_page"`
+	Total int   `json:"user_total"`
+	Users []User
+}
+
+type User struct {
+	ID                string `json:"user_id"`
+	Role              string `json:"user_role"`
+	Username          string `json:"user_username"`
+	Email             string `json:"user_email"`
+	Password          string `json:"-"`
+	Status            string `json:"user_status"`
+	PasswordUpdatedAt string `json:"-"`
+	CreatedAt         string `json:"user_createdAt"`
+	UpdatedAt         string `json:"user_updatedAt"`
+	LastLogin         string `json:"user_lastLoginAT"`
+}
+
 // [TODO] study the relationship between page offset and limit and see if there is a better handling for the
 // values that the current implementation
-func ListUsers(ctx context.Context, params ListUsersParams) (user.UsersPage, error) {
+func ListUsers(ctx context.Context, params ListUsersParams) (UsersPage, error) {
 
 	var repoParams = user.UserListParams{
 		Limit: 10,
@@ -55,14 +75,14 @@ func ListUsers(ctx context.Context, params ListUsersParams) (user.UsersPage, err
 	us, err := user.List(ctx, repoParams)
 
 	if err != nil {
-		return user.UsersPage{}, err
+		return UsersPage{}, err
 	}
 
-	var users []user.User
+	var users []User
 
 	for _, repoUser := range us {
 
-		users = append(users, user.User{
+		users = append(users, User{
 			ID:        repoUser.ID,
 			Username:  repoUser.Username,
 			Role:      repoUser.Role,
@@ -74,7 +94,7 @@ func ListUsers(ctx context.Context, params ListUsersParams) (user.UsersPage, err
 		})
 	}
 
-	return user.UsersPage{
+	return UsersPage{
 		Limit: repoParams.Limit,
 		Page:  int64(repoParams.Page),
 		Total: len(users),

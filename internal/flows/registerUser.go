@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/madeinly/users/internal/features/auth"
 	"github.com/madeinly/users/internal/features/user"
 )
 
@@ -17,17 +18,19 @@ type RegisteUserParams struct {
 
 func RegisterUser(ctx context.Context, params RegisteUserParams) error {
 
-	_, err := user.Create(ctx, user.CreateUserParams{
+	password := auth.HashPassword(params.Password)
+
+	err := user.Create(ctx, user.CreateUserParams{
 		UserID:   uuid.NewString(),
 		Username: params.Username,
 		Email:    params.Email,
-		Password: params.Password,
+		Password: password,
 		Role:     params.Role,
 		Status:   params.Status,
 	})
 
 	if err != nil {
-		return err
+		return ErrServerFailure
 	}
 
 	return nil
