@@ -9,6 +9,30 @@ import (
 	"context"
 )
 
+const countFilteredUsers = `-- name: CountFilteredUsers :one
+SELECT
+   COUNT(u.id)
+FROM
+    users u
+WHERE
+    (?1 = '' OR u.username LIKE '%' || ?1 || '%' ) AND
+    (?2 = '' OR u.status = ?2) AND
+    (?3 = '' OR u.role = ?3)
+`
+
+type CountFilteredUsersParams struct {
+	Username interface{} `json:"username"`
+	Status   interface{} `json:"status"`
+	Role     interface{} `json:"role"`
+}
+
+func (q *Queries) CountFilteredUsers(ctx context.Context, arg CountFilteredUsersParams) (int64, error) {
+	row := q.queryRow(ctx, q.countFilteredUsersStmt, countFilteredUsers, arg.Username, arg.Status, arg.Role)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const countUsers = `-- name: CountUsers :one
 SELECT COUNT(*) FROM users
 `

@@ -30,6 +30,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.cleanupExpiredSessionsStmt, err = db.PrepareContext(ctx, cleanupExpiredSessions); err != nil {
 		return nil, fmt.Errorf("error preparing query CleanupExpiredSessions: %w", err)
 	}
+	if q.countFilteredUsersStmt, err = db.PrepareContext(ctx, countFilteredUsers); err != nil {
+		return nil, fmt.Errorf("error preparing query CountFilteredUsers: %w", err)
+	}
 	if q.countUsersStmt, err = db.PrepareContext(ctx, countUsers); err != nil {
 		return nil, fmt.Errorf("error preparing query CountUsers: %w", err)
 	}
@@ -118,6 +121,11 @@ func (q *Queries) Close() error {
 	if q.cleanupExpiredSessionsStmt != nil {
 		if cerr := q.cleanupExpiredSessionsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing cleanupExpiredSessionsStmt: %w", cerr)
+		}
+	}
+	if q.countFilteredUsersStmt != nil {
+		if cerr := q.countFilteredUsersStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing countFilteredUsersStmt: %w", cerr)
 		}
 	}
 	if q.countUsersStmt != nil {
@@ -286,6 +294,7 @@ type Queries struct {
 	tx                           *sql.Tx
 	addUserMetaStmt              *sql.Stmt
 	cleanupExpiredSessionsStmt   *sql.Stmt
+	countFilteredUsersStmt       *sql.Stmt
 	countUsersStmt               *sql.Stmt
 	createSessionStmt            *sql.Stmt
 	createUserStmt               *sql.Stmt
@@ -319,6 +328,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		tx:                           tx,
 		addUserMetaStmt:              q.addUserMetaStmt,
 		cleanupExpiredSessionsStmt:   q.cleanupExpiredSessionsStmt,
+		countFilteredUsersStmt:       q.countFilteredUsersStmt,
 		countUsersStmt:               q.countUsersStmt,
 		createSessionStmt:            q.createSessionStmt,
 		createUserStmt:               q.createUserStmt,

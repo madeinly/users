@@ -11,6 +11,7 @@ import (
 type Querier interface {
 	AddUserMeta(ctx context.Context, arg AddUserMetaParams) (UsersMetum, error)
 	CleanupExpiredSessions(ctx context.Context) error
+	CountFilteredUsers(ctx context.Context, arg CountFilteredUsersParams) (int64, error)
 	CountUsers(ctx context.Context) (int64, error)
 	CreateSession(ctx context.Context, arg CreateSessionParams) error
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)

@@ -16,9 +16,8 @@ type ListUsersParams struct {
 }
 
 type UsersPage struct {
-	Limit int64 `json:"user_limit"`
-	Page  int64 `json:"user_page"`
-	Total int   `json:"user_total"`
+	Page  int64 `json:"user_pages"`
+	Total int64 `json:"user_total"`
 	Users []User
 }
 
@@ -69,10 +68,12 @@ func ListUsers(ctx context.Context, params ListUsersParams) (UsersPage, error) {
 	if repoParams.Page == 1 {
 		repoParams.Offset = 0
 	} else {
-		repoParams.Offset = int64(repoParams.Page) * repoParams.Limit
+		repoParams.Offset = int64(repoParams.Page-1) * repoParams.Limit
 	}
 
-	us, err := user.List(ctx, repoParams)
+	us, usersCount, err := user.List(ctx, repoParams)
+
+	totalPages := (usersCount + repoParams.Limit - 1) / repoParams.Limit //ceiling trick
 
 	if err != nil {
 		return UsersPage{}, err
@@ -95,9 +96,8 @@ func ListUsers(ctx context.Context, params ListUsersParams) (UsersPage, error) {
 	}
 
 	return UsersPage{
-		Limit: repoParams.Limit,
-		Page:  int64(repoParams.Page),
-		Total: len(users),
+		Page:  totalPages,
+		Total: usersCount,
 		Users: users,
 	}, nil
 

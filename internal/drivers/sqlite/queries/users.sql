@@ -86,6 +86,17 @@ WHERE
 LIMIT @limit OFFSET @offset;
 
 
+-- name: CountFilteredUsers :one
+SELECT
+   COUNT(u.id)
+FROM
+    users u
+WHERE
+    (@username = '' OR u.username LIKE '%' || @username || '%' ) AND
+    (@status = '' OR u.status = @status) AND
+    (@role = '' OR u.role = @role);
+
+
 
 -- name: UpdateUserUsername :exec
 UPDATE users
